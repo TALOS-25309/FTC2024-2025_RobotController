@@ -124,6 +124,13 @@ class HorizontalLinear implements Part {
         if (this.isUsingPID) {
             double err = targetPosition - motor.getCurrentPosition();
             double power = IntakeConstants.HOR_LINEAR_kP * err;
+            if (IntakeConstants.HOR_LINEAR_MODE == IntakeConstants.HorLinearMode.AUTO) {
+                if (power > 0) power = Math.min(power, IntakeConstants.HOR_LINEAR_AUTO_SPEED);
+                else power = Math.max(power, -IntakeConstants.HOR_LINEAR_AUTO_SPEED);
+            } else {
+                if (power > 0) power = Math.min(power, IntakeConstants.HOR_LINEAR_MANUAL_SPEED);
+                else power = Math.max(power, -IntakeConstants.HOR_LINEAR_MANUAL_SPEED);
+            }
             motor.setPower(power);
         }
     }

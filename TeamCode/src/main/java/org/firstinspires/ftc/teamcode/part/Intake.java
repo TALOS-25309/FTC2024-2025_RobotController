@@ -4,6 +4,8 @@ import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.hardware.CRServo;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 
@@ -24,6 +26,17 @@ class IntakeConstants {
     public static final double HOR_LINEAR_kP = 0.001;
 
     // Eater
+    public static final double EATER_ARM_DOWN_POSE = 0.0;
+    public static final double EATER_ARM_UP_POSE = 1.0;
+
+    public static final double EATER_SPEED = 0.5;
+
+//    /*
+//    mode == MANUAL : hand 각도를 직접 조정
+//    mode == AUTO   : hand 각도를 vision 과 연동
+//     */
+//    public enum EaterMode {MANUAL, AUTO};
+//    public static EaterMode EATER_MODE = EaterMode.AUTO;
 }
 
 // Main Part
@@ -64,6 +77,26 @@ public class Intake implements Part{
     }
     public static void cmdManualStop() {
         horizontalLinear.cmdManualStop();
+    }
+
+    public static void cmdEaterRun(){
+        eater.cmdEaterRun();
+    }
+
+    public static void cmdEaterStop(){
+        eater.cmdEaterStop();
+    }
+
+    public static void cmdHandRotate(double theta){
+        eater.cmdHandRotate(theta);
+    }
+
+    public static void cmdArmUp(){
+        eater.cmdArmUp();
+    }
+
+    public static void cmdArmDown(){
+        eater.cmdArmDown();
     }
 }
 
@@ -138,15 +171,51 @@ class HorizontalLinear implements Part {
 
 // Sub Part
 class Eater implements Part {
+
+    private Servo armServo;
+    private Servo handServo;
+    private CRServo eaterServo;
+
+
     public void init(HardwareMap hardwareMap, Telemetry telemetry) {
         // Initialize the eater
+        armServo = hardwareMap.get(Servo.class, "arm_servo");
+        handServo = hardwareMap.get(Servo.class, "hand_servo");
+        eaterServo = hardwareMap.get(CRServo.class, "eater_servo");
     }
 
     public void update() {
         // Update the eater
+
     }
 
     public void stop() {
         // Stop the eater
+        cmdEaterStop();
+        cmdArmDown();
+        cmdHandRotate(0.5);
     }
+
+    public void cmdEaterRun(){
+        eaterServo.setPower(IntakeConstants.EATER_SPEED);
+    }
+
+    public void cmdEaterStop(){
+        eaterServo.setPower(0);
+    }
+
+    public void cmdHandRotate(double theta){
+        handServo.setPosition(theta);
+    }
+
+    public void cmdArmUp(){
+        armServo.setPosition(IntakeConstants.EATER_ARM_UP_POSE);
+    }
+
+    public void cmdArmDown(){
+        armServo.setPosition(IntakeConstants.EATER_ARM_DOWN_POSE);
+    }
+
+
+
 }

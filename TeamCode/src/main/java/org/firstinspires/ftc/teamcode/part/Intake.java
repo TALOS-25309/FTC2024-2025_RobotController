@@ -23,7 +23,7 @@ class IntakeConstants {
     public static final double HOR_LINEAR_AUTO_SPEED = 0.6;
     public static final double HOR_LINEAR_MANUAL_SPEED = 0.3;
 
-    public static final double HOR_LINEAR_kP = 0.001;
+    public static final double HOR_LINEAR_kP = 1.0 * 0.001;
 
     // Eater
     public static final double EATER_ARM_DOWN_POSE = 0.0;

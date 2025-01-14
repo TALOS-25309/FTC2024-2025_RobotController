@@ -8,10 +8,27 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.CRServo;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.teamcode.feature.Schedule;
+import org.firstinspires.ftc.teamcode.feature.Vision;
 
 @Config
 class IntakeConstants {
     private IntakeConstants() {} // Prevent instantiation
+
+    // Intake
+    public static final double TIME1_1 = 100;
+
+    public static final double TIME2_1 = 100;
+    public static final double TIME2_2 = 100;
+    public static final double TIME2_3 = 100;
+
+    public static final double TIME3_1 = 100;
+    public static final double TIME3_2 = 100;
+
+    public static final double TIME4_1 = 100;
+    public static final double TIME4_2 = 100;
+    public static final double TIME4_3 = 100;
+
 
     // Horizontal Linear
     public static final double HOR_LINEAR_INNER_POSE = 0.0;
@@ -31,21 +48,21 @@ class IntakeConstants {
 
     public static final double EATER_SPEED = 0.5;
 
-    public static final double EATER_HAND_DOWN_POSE = 0.5;
-    public static final double EATER_HAND_UP_POSE = 1.0;
+    public static final double EATER_HAND_SPEED = 0.02;
 
-//    /*
-//    mode == MANUAL : hand 각도를 직접 조정
-//    mode == AUTO   : hand 각도를 vision 과 연동
-//     */
-//    public enum EaterMode {MANUAL, AUTO};
-//    public static EaterMode EATER_MODE = EaterMode.AUTO;
 }
 
 // Main Part
 public class Intake implements Part{
     private static final HorizontalLinear horizontalLinear = new HorizontalLinear();
     private static final Eater eater = new Eater();
+
+    private static int currentStep = 0;
+    private static int previousStep = 0;
+    private int[] nextStep = {1, 3, 1, 0};
+    private int[] backStep = {0, 2, 0, 3};
+
+    private Vision.SampleColor targetColor = Vision.SampleColor.YELLOW;
 
     public void init(HardwareMap hardwareMap, Telemetry telemetry) {
         horizontalLinear.init(hardwareMap, telemetry);
@@ -62,6 +79,107 @@ public class Intake implements Part{
         eater.stop();
     }
 
+    // functions
+    public void cmdStretchLinear(){
+        if(horizontalLinear.isBusy() || eater.isBusy()) return;
+
+        horizontalLinear.setBusy(true);
+        eater.setBusy(true);
+
+        double delay = 0;
+
+        // 1. Stretch Linear
+        Schedule.addTask(Intake::cmdAutoStretch, delay);
+        delay += IntakeConstants.TIME1_1;
+
+        // 2. End
+        Schedule.addTask(()->{
+            horizontalLinear.setBusy(false);
+            eater.setBusy(false);
+        }, delay);
+    }
+    public void cmdEat(){
+        if(horizontalLinear.isBusy() || eater.isBusy()) return;
+
+        horizontalLinear.setBusy(true);
+        eater.setBusy(true);
+
+        double delay = 0;
+
+        horizontalLinear.cmdSetMode(IntakeConstants.HorLinearMode.MANUAL);
+
+        // 1. Lower Eater
+        Schedule.addTask(eater::cmdArmDown, delay);
+        delay += IntakeConstants.TIME2_1;
+
+        // 2. Run Eater
+        Schedule.addTask(() -> {eater.cmdEaterRun(true);}, delay);
+        delay += IntakeConstants.TIME2_2;
+
+        // 3. End
+        Schedule.addTask(() -> {
+            horizontalLinear.setBusy(false);
+            eater.setBusy(false);
+        }, delay);
+    }
+    public void cmdVomit(){
+        if(horizontalLinear.isBusy() || eater.isBusy()) return;
+
+        horizontalLinear.setBusy(true);
+        eater.setBusy(true);
+
+        double delay = 0;
+
+        horizontalLinear.cmdSetMode(IntakeConstants.HorLinearMode.MANUAL);
+
+        // 1. Remove from Eater
+        Schedule.addTask(() -> {eater.cmdEaterRun(false);}, delay);
+        delay += IntakeConstants.TIME3_1;
+
+        // 2. Raise Eater
+        Schedule.addTask(eater::cmdArmUp, delay);
+        delay += IntakeConstants.TIME3_2;
+
+        // 3. End
+        Schedule.addTask(() -> {
+            eater.stop();
+            horizontalLinear.setBusy(false);
+            eater.setBusy(false);
+        }, delay);
+    }
+    public void cmdTransfer(){
+        if(horizontalLinear.isBusy() || eater.isBusy()) return;
+
+        horizontalLinear.setBusy(true);
+        eater.setBusy(true);
+
+        double delay = 0;
+
+        // 1. Raise Eater
+        Schedule.addTask(eater::cmdArmUp, delay);
+        delay += IntakeConstants.TIME4_1;
+
+        // 2. Retract Horizontal Linear
+        Schedule.addTask(Intake::cmdAutoRetract, delay);
+        delay += IntakeConstants.TIME4_2;
+
+        // 3. Close Claw
+        // executed on Deposit.cmdGrabSample
+        delay += DepositConstants.DEPOSIT_DELAY_CLOSE_CLAW;
+
+        // 4. Remove from Eater
+//        Schedule.addTask(()->{eater.cmdEaterRun(false);},delay);
+        Schedule.addTask(eater::cmdEaterStop,delay);
+        delay += IntakeConstants.TIME4_3;
+
+        // 5. End
+        Schedule.addTask(()->{
+            horizontalLinear.setBusy(false);
+            eater.setBusy(false);
+        }, delay);
+
+    }
+
     public static void cmdAutoStretch() {
         horizontalLinear.cmdSetMode(IntakeConstants.HorLinearMode.AUTO);
         horizontalLinear.cmdStretch();
@@ -70,36 +188,47 @@ public class Intake implements Part{
         horizontalLinear.cmdSetMode(IntakeConstants.HorLinearMode.AUTO);
         horizontalLinear.cmdRetract();
     }
-    public static void cmdManualStretch() {
+    public static void cmdAutoRotate() {
+        eater.cmdHandAutoRotate();
+    }
+    public void cmdManualStretch() {
         horizontalLinear.cmdSetMode(IntakeConstants.HorLinearMode.MANUAL);
         horizontalLinear.cmdStretch();
     }
-    public static void cmdManualRetract() {
+    public void cmdManualRetract() {
         horizontalLinear.cmdSetMode(IntakeConstants.HorLinearMode.MANUAL);
         horizontalLinear.cmdRetract();
     }
-    public static void cmdManualStop() {
+    public void cmdManualStop() {
         horizontalLinear.cmdManualStop();
     }
-
-    public static void cmdEaterRun() {
-        eater.cmdEaterRun();
+    public void cmdManualRotate(int direction) {
+        eater.cmdHandManualRotate(direction);
     }
 
-    public static void cmdEaterStop() {
-        eater.cmdEaterStop();
+    public void setTargetColor(Vision.SampleColor color){
+        targetColor = color;
     }
 
-    public static void cmdHandRotate(double theta) {
-        eater.cmdHandRotate(theta);
+    public void cmdRunNextStep(){
+        currentStep = nextStep[currentStep];
+        cmdRunCurrentStep();
     }
-
-    public static void cmdArmUp() {
-        eater.cmdArmUp();
+    public void cmdRunPrevStep(){
+        currentStep = backStep[currentStep];
+        cmdRunCurrentStep();
     }
-
-    public static void cmdArmDown() {
-        eater.cmdArmDown();
+    public void cmdRunCurrentStep(){
+        if (currentStep == previousStep) return;
+        switch (currentStep){
+            case 0: cmdStretchLinear();
+            case 1: cmdEat();
+            case 2: cmdVomit();
+            case 3: cmdTransfer();
+        }
+    }
+    public int cmdGetCurrentStep(){
+        return currentStep;
     }
 }
 
@@ -109,6 +238,7 @@ class HorizontalLinear implements Part {
     private DcMotor motor;
     private double targetPosition = IntakeConstants.HOR_LINEAR_INNER_POSE;
     private boolean isUsingPID = false;
+    private boolean isBusy = false;
 
     public void init(HardwareMap hardwareMap, Telemetry telemetry) {
         motor = hardwareMap.get(DcMotor.class, "horizontalLinear");
@@ -181,6 +311,12 @@ class HorizontalLinear implements Part {
             motor.setPower(0);
         }
     }
+    public void setBusy(boolean busy){
+        isBusy = busy;
+    }
+    public boolean isBusy(){
+        return isBusy;
+    }
 }
 
 // Sub Part
@@ -189,6 +325,9 @@ class Eater implements Part {
     private Servo armServo;
     private Servo handServo;
     private CRServo eaterServo;
+    private boolean isBusy;
+
+    private double targetAngle;
 
 
     public void init(HardwareMap hardwareMap, Telemetry telemetry) {
@@ -203,28 +342,40 @@ class Eater implements Part {
     public void stop() {
         cmdEaterStop();
         cmdArmDown();
-        cmdHandRotate(0.5);
+        cmdHandManualRotate(0);
     }
 
-    public void cmdEaterRun(){
-        eaterServo.setPower(IntakeConstants.EATER_SPEED);
+    public void cmdEaterRun(boolean inside){
+        eaterServo.setPower(inside ? IntakeConstants.EATER_SPEED : -IntakeConstants.EATER_SPEED);
     }
-
     public void cmdEaterStop(){
         eaterServo.setPower(0);
     }
-
-    public void cmdHandRotate(double theta){
-        handServo.setPosition(theta);
+    public void cmdHandAutoRotate(){
+        Vision.Sample target = Vision.detectTarget();
+        if (target != null){
+            targetAngle = target.angle;
+        }
+        handServo.setPosition(targetAngle);
     }
+    public void cmdHandManualRotate(int direction){
+        targetAngle += direction * IntakeConstants.EATER_HAND_SPEED;
 
+        if (targetAngle < 0) targetAngle = 0;
+        else if (targetAngle > 1) targetAngle = 1;
+
+        handServo.setPosition(targetAngle);
+    }
     public void cmdArmUp(){
-        handServo.setPosition(IntakeConstants.EATER_HAND_UP_POSE);
         armServo.setPosition(IntakeConstants.EATER_ARM_UP_POSE);
     }
-
     public void cmdArmDown(){
-        handServo.setPosition(IntakeConstants.EATER_HAND_DOWN_POSE);
         armServo.setPosition(IntakeConstants.EATER_ARM_DOWN_POSE);
+    }
+    public void setBusy(boolean busy){
+        isBusy = busy;
+    }
+    public boolean isBusy(){
+        return isBusy;
     }
 }

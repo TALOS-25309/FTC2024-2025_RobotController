@@ -26,7 +26,6 @@ class DepositConstants{
 
     public static final double HOR_LINEAR_AUTO_SPEED = 0.6;
     public static final double HOR_LINEAR_MANUAL_SPEED = 0.3;
-    public static final double HOR_HANGING_AUTO_SPEED = 1.0;
 
     // Claw
     public static final Double CLAW_OPEN_POS = 1.0;
@@ -54,7 +53,7 @@ public class Deposit implements Part{
     public static final VerticalLinear verticalLinear = new VerticalLinear();
     public static final Claw claw = new Claw();
 
-    enum Location {LOW, HIGH}
+    public enum Location {LOW, HIGH}
 
     public void init(HardwareMap hardwareMap, Telemetry telemetry) {
         verticalLinear.init(hardwareMap,telemetry);
@@ -71,7 +70,7 @@ public class Deposit implements Part{
         claw.stop();
     }
 
-    public static void cmdDepositSample(Location location){
+    public void cmdDepositSample(Location location){
         if(verticalLinear.isBusy() || claw.isBusy()) return;
 
         verticalLinear.setBusy(true);
@@ -79,9 +78,9 @@ public class Deposit implements Part{
 
         double delay = 0;
 
-        // 1. Close Claw
-        Schedule.addTask(claw::cmdClose, delay);
-        delay += DepositConstants.DEPOSIT_DELAY_CLOSE_CLAW;
+//        // 1. Close Claw
+//        Schedule.addTask(claw::cmdClose, delay);
+//        delay += DepositConstants.DEPOSIT_DELAY_CLOSE_CLAW;
 
         // 2. Go to Basket
         Schedule.addTask(claw::cmdUp, delay);
@@ -99,7 +98,6 @@ public class Deposit implements Part{
             claw.setBusy(false);
         }, delay);
     }
-
     public void cmdDepositSpecimen(Location location){
         if(verticalLinear.isBusy() || claw.isBusy()) return;
 
@@ -108,9 +106,9 @@ public class Deposit implements Part{
 
         double delay = 0;
 
-        // 1. Close Claw
-        Schedule.addTask(claw::cmdClose, delay);
-        delay += DepositConstants.DEPOSIT_DELAY_CLOSE_CLAW;
+//        // 1. Close Claw
+//        Schedule.addTask(claw::cmdClose, delay);
+//        delay += DepositConstants.DEPOSIT_DELAY_CLOSE_CLAW;
 
         // 2. Go to Chamber
         Schedule.addTask(claw::cmdUp, delay);
@@ -128,7 +126,24 @@ public class Deposit implements Part{
             claw.setBusy(false);
         }, delay);
     }
+    public void cmdGrabSample() { // related to Intake.cmdTransfer
+        if (verticalLinear.isBusy() || claw.isBusy()) return;
 
+        claw.setBusy(true);
+
+        // 0. Wait Until Sample Comes
+        double delay = IntakeConstants.TIME4_1 + IntakeConstants.TIME4_2;
+
+        // 1. Close Claw
+        Schedule.addTask(claw::cmdClose, delay);
+        delay += DepositConstants.DEPOSIT_DELAY_CLOSE_CLAW;
+
+        // 2. End
+        Schedule.addTask(() -> {
+            verticalLinear.setBusy(false);
+            claw.setBusy(false);
+        }, delay);
+    }
     public void cmdReturn(){
         if(verticalLinear.isBusy() || claw.isBusy()) return;
 
@@ -151,15 +166,12 @@ public class Deposit implements Part{
             claw.setBusy(false);
         }, delay);
     }
-
     public void cmdManualStretch(){
         verticalLinear.cmdStretch();
     }
-
     public void cmdManualRetract(){
         verticalLinear.cmdRetract();
     }
-
     public void cmdManualStop(){
         verticalLinear.cmdManualStop();
     }

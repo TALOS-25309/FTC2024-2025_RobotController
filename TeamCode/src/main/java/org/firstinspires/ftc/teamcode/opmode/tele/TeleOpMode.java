@@ -65,9 +65,9 @@ public class TeleOpMode extends OpMode {
 
         // Road Runner Macro
         if (SmartGamepad.isPressed(smartGamepad1.gamepad().triangle, smartGamepad1.prev().triangle)) {
-            drive.cmdFollowBasketTrajectory();
-        } else if (SmartGamepad.isPressed(smartGamepad1.gamepad().circle, smartGamepad1.prev().circle)) {
-            drive.cmdFollowSpecimenTrajectory();
+            drive.cmdAutoAlignBasket();
+        } else if (SmartGamepad.isPressed(smartGamepad1.gamepad().cross, smartGamepad1.prev().cross)) {
+            drive.cmdAutoAlignSpecimen();
         }
 
         // Hanging

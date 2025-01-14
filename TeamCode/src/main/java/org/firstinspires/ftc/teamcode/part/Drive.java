@@ -139,7 +139,7 @@ public class Drive implements Part {
         this.drive.followTrajectorySequence(trajectory);
     }
 
-    public void cmdFollowBasketTrajectory() {
+    public void cmdAutoAlignBasket() {
         double dx = DriveConstants.BASKET_POSITION.getX() - this.robotPose.getX();
         double dy = DriveConstants.BASKET_POSITION.getY() - this.robotPose.getY();
         double angle = Math.atan2(dy, dx);
@@ -155,11 +155,15 @@ public class Drive implements Part {
         this.drive.followTrajectorySequenceAsync(basketTrajectory);
     }
 
-    public void cmdFollowSpecimenTrajectory() {
+    public void cmdAutoAlignSpecimen() {
         TrajectorySequence specimenTrajectory = this.drive.trajectorySequenceBuilder(this.robotPose)
                 .splineTo(DriveConstants.SPECIMEN_POSITION, Math.toRadians(90))
                 .build();
 
         this.drive.followTrajectorySequenceAsync(specimenTrajectory);
+    }
+
+    public void cmdAutoAlignSubmersible() {
+
     }
 }

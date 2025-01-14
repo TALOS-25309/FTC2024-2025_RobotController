@@ -2,7 +2,6 @@ package org.firstinspires.ftc.teamcode.opmode.tele;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
-import org.apache.commons.math3.optim.nonlinear.scalar.gradient.NonLinearConjugateGradientOptimizer;
 import org.firstinspires.ftc.teamcode.feature.Schedule;
 import org.firstinspires.ftc.teamcode.feature.SmartGamepad;
 import org.firstinspires.ftc.teamcode.part.Deposit;
@@ -87,10 +86,13 @@ public class TeleOpMode extends OpMode {
     public void controlGamepad2() {
         // Intake
         if (SmartGamepad.isPressed(smartGamepad2.gamepad().dpad_up, smartGamepad2.prev().dpad_up)) {
-            intake.runNextStep();
+            intake.cmdRunNextStep();
+            if (intake.cmdGetCurrentStep() == 3) {
+                deposit.cmdGrabSample();
+            }
         }
         else if (SmartGamepad.isPressed(smartGamepad2.gamepad().dpad_down, smartGamepad2.prev().dpad_down)) {
-            intake.runPrevStep();
+            intake.cmdRunPrevStep();
         }
 
         // Deposit
@@ -106,23 +108,31 @@ public class TeleOpMode extends OpMode {
 
         // Manual Linear
         if (smartGamepad2.gamepad().left_stick_y > 0.2) {
-            Intake.cmdManualStretch();
+            intake.cmdManualStretch();
         } else if (smartGamepad2.gamepad().left_stick_y < -0.2) {
-            Intake.cmdManualRetract();
+            intake.cmdManualRetract();
         } else {
-            Intake.cmdManualStop();
+            intake.cmdManualStop();
+        }
+
+        if (smartGamepad2.gamepad().right_stick_y > 0.2) {
+            deposit.cmdManualStretch();
+        } else if (smartGamepad2.gamepad().right_stick_y < -0.2) {
+            deposit.cmdManualRetract();
+        } else {
+            deposit.cmdManualStop();
         }
 
         // Manual Eater
         if (smartGamepad2.gamepad().left_bumper) {
-            Intake.cmdManualRotate(-1);
+            intake.cmdManualRotate(-1);
         } else if (smartGamepad2.gamepad().right_bumper) {
-            Intake.cmdManualRotate(+1);
+            intake.cmdManualRotate(+1);
         }
 
         // Auto Eater
         if (smartGamepad2.gamepad().left_trigger > 0.5 && smartGamepad2.gamepad().right_trigger > 0.5) {
-            Intake.cmdAutoRotate();
+            intake.cmdAutoRotate();
         }
     }
 

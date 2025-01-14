@@ -58,8 +58,9 @@ public class Intake implements Part{
     private static final Eater eater = new Eater();
 
     private static int currentStep = 0;
+    private static int previousStep = 0;
     private int[] nextStep = {1, 3, 1, 0};
-    private int[] prevStep = {0, 2, 0, 3};
+    private int[] backStep = {0, 2, 0, 3};
 
     private Vision.SampleColor targetColor = Vision.SampleColor.YELLOW;
 
@@ -111,15 +112,11 @@ public class Intake implements Part{
         Schedule.addTask(eater::cmdArmDown, delay);
         delay += IntakeConstants.TIME2_1;
 
-        // 2. Rotate Eater
-        Schedule.addTask(eater::cmdHandAutoRotate, delay);
+        // 2. Run Eater
+        Schedule.addTask(() -> {eater.cmdEaterRun(true);}, delay);
         delay += IntakeConstants.TIME2_2;
 
-        // 3. Run Eater
-        Schedule.addTask(() -> {eater.cmdEaterRun(true);}, delay);
-        delay += IntakeConstants.TIME2_3;
-
-        // 4. End
+        // 3. End
         Schedule.addTask(() -> {
             horizontalLinear.setBusy(false);
             eater.setBusy(false);
@@ -145,6 +142,7 @@ public class Intake implements Part{
 
         // 3. End
         Schedule.addTask(() -> {
+            eater.stop();
             horizontalLinear.setBusy(false);
             eater.setBusy(false);
         }, delay);
@@ -165,12 +163,14 @@ public class Intake implements Part{
         Schedule.addTask(Intake::cmdAutoRetract, delay);
         delay += IntakeConstants.TIME4_2;
 
-        // 3. Remove from Eater
-        Schedule.addTask(()->{eater.cmdEaterRun(false);},delay);
-        delay += IntakeConstants.TIME4_3;
+        // 3. Close Claw
+        // executed on Deposit.cmdGrabSample
+        delay += DepositConstants.DEPOSIT_DELAY_CLOSE_CLAW;
 
-        // 4. Close Claw...
-        // Deposit의 집게가 잡기 -> Deposit Part에서 해결
+        // 4. Remove from Eater
+//        Schedule.addTask(()->{eater.cmdEaterRun(false);},delay);
+        Schedule.addTask(eater::cmdEaterStop,delay);
+        delay += IntakeConstants.TIME4_3;
 
         // 5. End
         Schedule.addTask(()->{
@@ -188,21 +188,21 @@ public class Intake implements Part{
         horizontalLinear.cmdSetMode(IntakeConstants.HorLinearMode.AUTO);
         horizontalLinear.cmdRetract();
     }
-    public static void cmdManualStretch() {
-        horizontalLinear.cmdSetMode(IntakeConstants.HorLinearMode.MANUAL);
-        horizontalLinear.cmdStretch();
-    }
-    public static void cmdManualRetract() {
-        horizontalLinear.cmdSetMode(IntakeConstants.HorLinearMode.MANUAL);
-        horizontalLinear.cmdRetract();
-    }
-    public static void cmdManualStop() {
-        horizontalLinear.cmdManualStop();
-    }
     public static void cmdAutoRotate() {
         eater.cmdHandAutoRotate();
     }
-    public static void cmdManualRotate(int direction) {
+    public void cmdManualStretch() {
+        horizontalLinear.cmdSetMode(IntakeConstants.HorLinearMode.MANUAL);
+        horizontalLinear.cmdStretch();
+    }
+    public void cmdManualRetract() {
+        horizontalLinear.cmdSetMode(IntakeConstants.HorLinearMode.MANUAL);
+        horizontalLinear.cmdRetract();
+    }
+    public void cmdManualStop() {
+        horizontalLinear.cmdManualStop();
+    }
+    public void cmdManualRotate(int direction) {
         eater.cmdHandManualRotate(direction);
     }
 
@@ -210,21 +210,25 @@ public class Intake implements Part{
         targetColor = color;
     }
 
-    public void runNextStep(){
+    public void cmdRunNextStep(){
         currentStep = nextStep[currentStep];
-        runCurrentStep();
+        cmdRunCurrentStep();
     }
-    public void runPrevStep(){
-        currentStep = prevStep[currentStep];
-        runCurrentStep();
+    public void cmdRunPrevStep(){
+        currentStep = backStep[currentStep];
+        cmdRunCurrentStep();
     }
-    public void runCurrentStep(){
+    public void cmdRunCurrentStep(){
+        if (currentStep == previousStep) return;
         switch (currentStep){
             case 0: cmdStretchLinear();
             case 1: cmdEat();
             case 2: cmdVomit();
             case 3: cmdTransfer();
         }
+    }
+    public int cmdGetCurrentStep(){
+        return currentStep;
     }
 }
 

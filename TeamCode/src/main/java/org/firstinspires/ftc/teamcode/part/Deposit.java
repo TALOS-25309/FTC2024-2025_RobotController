@@ -78,9 +78,9 @@ public class Deposit implements Part{
 
         double delay = 0;
 
-        // 1. Close Claw
-        Schedule.addTask(claw::cmdClose, delay);
-        delay += DepositConstants.DEPOSIT_DELAY_CLOSE_CLAW;
+//        // 1. Close Claw
+//        Schedule.addTask(claw::cmdClose, delay);
+//        delay += DepositConstants.DEPOSIT_DELAY_CLOSE_CLAW;
 
         // 2. Go to Basket
         Schedule.addTask(claw::cmdUp, delay);
@@ -98,7 +98,6 @@ public class Deposit implements Part{
             claw.setBusy(false);
         }, delay);
     }
-
     public void cmdDepositSpecimen(Location location){
         if(verticalLinear.isBusy() || claw.isBusy()) return;
 
@@ -107,9 +106,9 @@ public class Deposit implements Part{
 
         double delay = 0;
 
-        // 1. Close Claw
-        Schedule.addTask(claw::cmdClose, delay);
-        delay += DepositConstants.DEPOSIT_DELAY_CLOSE_CLAW;
+//        // 1. Close Claw
+//        Schedule.addTask(claw::cmdClose, delay);
+//        delay += DepositConstants.DEPOSIT_DELAY_CLOSE_CLAW;
 
         // 2. Go to Chamber
         Schedule.addTask(claw::cmdUp, delay);
@@ -127,7 +126,24 @@ public class Deposit implements Part{
             claw.setBusy(false);
         }, delay);
     }
+    public void cmdGrabSample() { // related to Intake.cmdTransfer
+        if (verticalLinear.isBusy() || claw.isBusy()) return;
 
+        claw.setBusy(true);
+
+        // 0. Wait Until Sample Comes
+        double delay = IntakeConstants.TIME4_1 + IntakeConstants.TIME4_2;
+
+        // 1. Close Claw
+        Schedule.addTask(claw::cmdClose, delay);
+        delay += DepositConstants.DEPOSIT_DELAY_CLOSE_CLAW;
+
+        // 2. End
+        Schedule.addTask(() -> {
+            verticalLinear.setBusy(false);
+            claw.setBusy(false);
+        }, delay);
+    }
     public void cmdReturn(){
         if(verticalLinear.isBusy() || claw.isBusy()) return;
 
@@ -150,15 +166,12 @@ public class Deposit implements Part{
             claw.setBusy(false);
         }, delay);
     }
-
     public void cmdManualStretch(){
         verticalLinear.cmdStretch();
     }
-
     public void cmdManualRetract(){
         verticalLinear.cmdRetract();
     }
-
     public void cmdManualStop(){
         verticalLinear.cmdManualStop();
     }

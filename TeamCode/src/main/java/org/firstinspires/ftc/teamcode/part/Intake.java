@@ -23,13 +23,16 @@ class IntakeConstants {
     public static final double HOR_LINEAR_AUTO_SPEED = 0.6;
     public static final double HOR_LINEAR_MANUAL_SPEED = 0.3;
 
-    public static final double HOR_LINEAR_kP = 0.001;
+    public static final double HOR_LINEAR_kP = 1.0 * 0.001;
 
     // Eater
     public static final double EATER_ARM_DOWN_POSE = 0.0;
     public static final double EATER_ARM_UP_POSE = 1.0;
 
     public static final double EATER_SPEED = 0.5;
+
+    public static final double EATER_HAND_DOWN_POSE = 0.5;
+    public static final double EATER_HAND_UP_POSE = 1.0;
 
 //    /*
 //    mode == MANUAL : hand 각도를 직접 조정
@@ -114,13 +117,20 @@ class HorizontalLinear implements Part {
         motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
-        motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
     }
 
     public void update() {
         if (this.isUsingPID) {
             double err = targetPosition - motor.getCurrentPosition();
             double power = IntakeConstants.HOR_LINEAR_kP * err;
+            if (IntakeConstants.HOR_LINEAR_MODE == IntakeConstants.HorLinearMode.AUTO) {
+                if (power > 0) power = Math.min(power, IntakeConstants.HOR_LINEAR_AUTO_SPEED);
+                else power = Math.max(power, -IntakeConstants.HOR_LINEAR_AUTO_SPEED);
+            } else {
+                if (power > 0) power = Math.min(power, IntakeConstants.HOR_LINEAR_MANUAL_SPEED);
+                else power = Math.max(power, -IntakeConstants.HOR_LINEAR_MANUAL_SPEED);
+            }
             motor.setPower(power);
         }
     }
@@ -178,19 +188,15 @@ class Eater implements Part {
 
 
     public void init(HardwareMap hardwareMap, Telemetry telemetry) {
-        // Initialize the eater
-        armServo = hardwareMap.get(Servo.class, "arm_servo");
-        handServo = hardwareMap.get(Servo.class, "hand_servo");
-        eaterServo = hardwareMap.get(CRServo.class, "eater_servo");
+        armServo = hardwareMap.get(Servo.class, "intakeArm");
+        handServo = hardwareMap.get(Servo.class, "intakeHand");
+        eaterServo = hardwareMap.get(CRServo.class, "intakeEater");
     }
 
     public void update() {
-        // Update the eater
-
     }
 
     public void stop() {
-        // Stop the eater
         cmdEaterStop();
         cmdArmDown();
         cmdHandRotate(0.5);
@@ -209,13 +215,12 @@ class Eater implements Part {
     }
 
     public void cmdArmUp(){
+        handServo.setPosition(IntakeConstants.EATER_HAND_UP_POSE);
         armServo.setPosition(IntakeConstants.EATER_ARM_UP_POSE);
     }
 
     public void cmdArmDown(){
+        handServo.setPosition(IntakeConstants.EATER_HAND_DOWN_POSE);
         armServo.setPosition(IntakeConstants.EATER_ARM_DOWN_POSE);
     }
-
-
-
 }

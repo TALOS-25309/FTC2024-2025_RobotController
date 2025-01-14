@@ -10,6 +10,7 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
+import org.firstinspires.ftc.teamcode.trajectorysequence.TrajectorySequence;
 
 @Config
 class DriveConstants {
@@ -17,6 +18,7 @@ class DriveConstants {
 
     // Motor Speed
     public static final double MOTOR_SPEED = 1.0;
+    public static final double MOTOR_SPEED_SLOW = 0.5;
 
     // X, Y, Omega Weight (Speed)
     public static final double VX_WEIGHT = 1.0;
@@ -28,9 +30,14 @@ class DriveConstants {
     public static final Pose2d AUTO_INITIAL_POSITION = new Pose2d(0, 0, 0);
     public static final Pose2d TELE_INITIAL_POSITION = new Pose2d(0, 0, 0);
     public static Pose2d INITIAL_POSITION = AUTO_INITIAL_POSITION;
+
+    // Trajectory Values
+    public static final Vector2d BASKET_POSITION = new Vector2d(-72, -72);
+    public static final double BASKET_RADIUS = 6;
+    public static final Vector2d SPECIMEN_POSITION = new Vector2d(0, 0);
 }
 
-public class Drive {
+public class Drive implements Part {
     private Telemetry telemetry;
 
     private DcMotor leftFront, leftRear, rightRear, rightFront;
@@ -39,7 +46,7 @@ public class Drive {
     private SampleMecanumDrive drive;
     private Pose2d robotPose;
 
-    public void init(HardwareMap hardwareMap, Telemetry telemetry, boolean isAuto) {
+    public void init(HardwareMap hardwareMap, Telemetry telemetry) {
         this.telemetry = telemetry;
 
         // Initialize Motors
@@ -55,11 +62,6 @@ public class Drive {
 
         // Initialize Drive
         this.drive = new SampleMecanumDrive(hardwareMap);
-        if (isAuto) {
-            DriveConstants.INITIAL_POSITION = DriveConstants.AUTO_INITIAL_POSITION;
-        } else {
-            DriveConstants.INITIAL_POSITION = DriveConstants.TELE_INITIAL_POSITION;
-        }
         this.drive.setPoseEstimate(DriveConstants.INITIAL_POSITION);
     }
 
@@ -82,8 +84,8 @@ public class Drive {
         }
     }
 
-    public TrajectoryBuilder trajectoryBuilder(Pose2d startPose) {
-        return this.drive.trajectoryBuilder(startPose);
+    public TrajectoryBuilder trajectoryBuilder() {
+        return this.drive.trajectoryBuilder(this.robotPose);
     }
 
     public boolean isBusy() {
@@ -91,7 +93,10 @@ public class Drive {
     }
 
     public void cmdDrive(double x, double y, double omega) {
-        if (this.drive.isBusy()) return;
+        if (x != 0.0 || y != 0.0 || omega != 0.0) {
+            if (this.drive.isBusy())
+                this.drive.breakFollowing();
+        }
 
         if (DriveConstants.USING_LOCALIZATION_BASED_DRIVE) {
             double angle = DriveConstants.INITIAL_POSITION.getHeading() + this.robotPose.getHeading();
@@ -118,11 +123,43 @@ public class Drive {
         this.motors[3].setPower(drivePower.getX() + drivePower.getY() + drivePower.getHeading());
     }
 
-    public void cmdFollowTrajectory(Trajectory trajectory) {
-        this.drive.followTrajectory(trajectory);
+    public void cmdDriveSlowly(double x, double y) {
+        if (x != 0.0 || y != 0.0) {
+            if (this.drive.isBusy())
+                this.drive.breakFollowing();
+        }
+
+        this.motors[0].setPower(x * DriveConstants.MOTOR_SPEED_SLOW - y * DriveConstants.MOTOR_SPEED_SLOW);
+        this.motors[1].setPower(x * DriveConstants.MOTOR_SPEED_SLOW + y * DriveConstants.MOTOR_SPEED_SLOW);
+        this.motors[2].setPower(x * DriveConstants.MOTOR_SPEED_SLOW - y * DriveConstants.MOTOR_SPEED_SLOW);
+        this.motors[3].setPower(x * DriveConstants.MOTOR_SPEED_SLOW + y * DriveConstants.MOTOR_SPEED_SLOW);
     }
 
-    public void cmdFollowTrajectoryAsync(Trajectory trajectory) {
-        this.drive.followTrajectoryAsync(trajectory);
+    public void cmdFollowTrajectory(TrajectorySequence trajectory) {
+        this.drive.followTrajectorySequence(trajectory);
+    }
+
+    public void cmdFollowBasketTrajectory() {
+        double dx = DriveConstants.BASKET_POSITION.getX() - this.robotPose.getX();
+        double dy = DriveConstants.BASKET_POSITION.getY() - this.robotPose.getY();
+        double angle = Math.atan2(dy, dx);
+
+        Vector2d target = new Vector2d(
+                DriveConstants.BASKET_POSITION.getX() - Math.cos(angle) * DriveConstants.BASKET_RADIUS,
+                DriveConstants.BASKET_POSITION.getY() - Math.sin(angle) * DriveConstants.BASKET_RADIUS);
+
+        TrajectorySequence basketTrajectory = this.drive.trajectorySequenceBuilder(this.robotPose)
+                .splineTo(target, angle)
+                .build();
+
+        this.drive.followTrajectorySequenceAsync(basketTrajectory);
+    }
+
+    public void cmdFollowSpecimenTrajectory() {
+        TrajectorySequence specimenTrajectory = this.drive.trajectorySequenceBuilder(this.robotPose)
+                .splineTo(DriveConstants.SPECIMEN_POSITION, Math.toRadians(90))
+                .build();
+
+        this.drive.followTrajectorySequenceAsync(specimenTrajectory);
     }
 }

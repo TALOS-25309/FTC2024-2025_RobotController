@@ -17,7 +17,7 @@ class IntakeConstants {
     public static final double HOR_LINEAR_INNER_POSE = 0.0;
     public static final double HOR_LINEAR_OUTER_POSE = 0.0;
 
-    public enum HorLinearMode { MANUAL, AUTO }
+    public enum HorLinearMode { MANUAL, AUTO, EMERGENCY }
     public static HorLinearMode HOR_LINEAR_MODE = HorLinearMode.AUTO;
 
     public static final double HOR_LINEAR_AUTO_SPEED = 0.6;
@@ -82,23 +82,23 @@ public class Intake implements Part{
         horizontalLinear.cmdManualStop();
     }
 
-    public static void cmdEaterRun(){
+    public static void cmdEaterRun() {
         eater.cmdEaterRun();
     }
 
-    public static void cmdEaterStop(){
+    public static void cmdEaterStop() {
         eater.cmdEaterStop();
     }
 
-    public static void cmdHandRotate(double theta){
+    public static void cmdHandRotate(double theta) {
         eater.cmdHandRotate(theta);
     }
 
-    public static void cmdArmUp(){
+    public static void cmdArmUp() {
         eater.cmdArmUp();
     }
 
-    public static void cmdArmDown(){
+    public static void cmdArmDown() {
         eater.cmdArmDown();
     }
 }
@@ -136,7 +136,7 @@ class HorizontalLinear implements Part {
     }
 
     public void stop() {
-        IntakeConstants.HOR_LINEAR_MODE = IntakeConstants.HorLinearMode.MANUAL;
+        IntakeConstants.HOR_LINEAR_MODE = IntakeConstants.HorLinearMode.EMERGENCY;
         this.targetPosition = motor.getCurrentPosition();
         this.isUsingPID = false;
         motor.setPower(0);
@@ -173,6 +173,10 @@ class HorizontalLinear implements Part {
     public void cmdManualStop() {
         if (IntakeConstants.HOR_LINEAR_MODE == IntakeConstants.HorLinearMode.MANUAL) {
             this.isUsingPID = true;
+            this.targetPosition = motor.getCurrentPosition();
+            motor.setPower(0);
+        } else if (IntakeConstants.HOR_LINEAR_MODE == IntakeConstants.HorLinearMode.EMERGENCY) {
+            this.isUsingPID = false;
             this.targetPosition = motor.getCurrentPosition();
             motor.setPower(0);
         }

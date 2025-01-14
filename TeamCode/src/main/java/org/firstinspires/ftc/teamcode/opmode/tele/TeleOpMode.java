@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.opmode.tele;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
+import org.firstinspires.ftc.teamcode.feature.Schedule;
 import org.firstinspires.ftc.teamcode.feature.SmartGamepad;
 import org.firstinspires.ftc.teamcode.part.Intake;
 import org.firstinspires.ftc.teamcode.part.Part;
@@ -32,6 +33,7 @@ public class TeleOpMode extends OpMode {
         for (Part part : part_list) {
             part.update();
         }
+        Schedule.update();
     }
 
     @Override

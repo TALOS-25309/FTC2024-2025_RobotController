@@ -41,15 +41,17 @@ class VisionConstants{
 public class Vision {
 
     private OpenCvCamera webcam;
-    private boolean isTurnedOn;
-    private SampleDetectionPipeline pipeline;
+    private static boolean isTurnedOn;
+    private static SampleDetectionPipeline pipeline;
+
+    public static SampleColor targetColor;
 
     public Vision(OpenCvCamera webcam){
         this.webcam = webcam;
     }
 
     public void turnOn() {
-        this.pipeline = new SampleDetectionPipeline();
+        pipeline = new SampleDetectionPipeline();
 
         this.webcam.setPipeline(pipeline);
         this.webcam.openCameraDevice();
@@ -65,11 +67,15 @@ public class Vision {
     }
 
     // detect the closest sample from the eater
-    public Sample detectTarget(SampleColor color){
+    public static Sample detectTarget(){
         if(!isTurnedOn) return null;
 
-        this.pipeline.setTargetColor(color);
-        return this.pipeline.getTargetSample();
+        pipeline.setTargetColor(targetColor);
+        return pipeline.getTargetSample();
+    }
+
+    public static void setTargetColor(SampleColor color) {
+        targetColor = color;
     }
 
 
@@ -91,7 +97,6 @@ public class Vision {
 
         public ArrayList<Sample> rects = new ArrayList<>();
         public Sample targetSample;
-        public SampleColor targetColor;
 
         // Main loop
         public Mat processFrame(Mat input) {
@@ -130,7 +135,7 @@ public class Vision {
 
         // Set target color
         public void setTargetColor(SampleColor color){
-            this.targetColor = color;
+            targetColor = color;
         }
 
         // Get target sample

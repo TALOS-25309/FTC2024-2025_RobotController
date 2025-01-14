@@ -74,7 +74,36 @@ public class TeleOpMode extends OpMode {
     }
 
     public void controlGamepad2() {
+        // Intake
+        if (SmartGamepad.isPressed(smartGamepad2.gamepad().dpad_up, smartGamepad2.prev().dpad_up)) {
+            intake.runNextStep();
+        }
+        else if (SmartGamepad.isPressed(smartGamepad2.gamepad().dpad_down, smartGamepad2.prev().dpad_down)) {
+            intake.runPrevStep();
+        }
 
+        // Deposit
+
+        // Manual Linear
+        if (smartGamepad2.gamepad().left_stick_y > 0.2) {
+            Intake.cmdManualStretch();
+        } else if (smartGamepad2.gamepad().left_stick_y < -0.2) {
+            Intake.cmdManualRetract();
+        } else {
+            Intake.cmdManualStop();
+        }
+
+        // Manual Eater
+        if (smartGamepad2.gamepad().left_bumper) {
+            Intake.cmdManualRotate(-1);
+        } else if (smartGamepad2.gamepad().right_bumper) {
+            Intake.cmdManualRotate(+1);
+        }
+
+        // Auto Eater
+        if (smartGamepad2.gamepad().left_trigger > 0.5 && smartGamepad2.gamepad().right_trigger > 0.5) {
+            Intake.cmdAutoRotate();
+        }
     }
 
     public void checkEmergency() {

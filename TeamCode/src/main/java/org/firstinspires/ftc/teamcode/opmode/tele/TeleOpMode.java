@@ -74,6 +74,13 @@ public class TeleOpMode extends OpMode {
             drive.cmdFollowSpecimenTrajectory();
         }
 
+        // Rotate
+        if (smartGamepad1.gamepad().left_trigger > 0) {
+            drive.cmdDrive(0,0, smartGamepad1.gamepad().left_trigger);
+        } else if (smartGamepad1.gamepad().right_trigger > 0) {
+            drive.cmdDrive(0,0, smartGamepad1.gamepad().right_trigger);
+        }
+
         // Hanging
     }
 

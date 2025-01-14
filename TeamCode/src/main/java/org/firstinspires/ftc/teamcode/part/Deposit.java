@@ -26,7 +26,6 @@ class DepositConstants{
 
     public static final double HOR_LINEAR_AUTO_SPEED = 0.6;
     public static final double HOR_LINEAR_MANUAL_SPEED = 0.3;
-    public static final double HOR_HANGING_AUTO_SPEED = 1.0;
 
     // Claw
     public static final Double CLAW_OPEN_POS = 1.0;
@@ -54,7 +53,7 @@ public class Deposit implements Part{
     public static final VerticalLinear verticalLinear = new VerticalLinear();
     public static final Claw claw = new Claw();
 
-    enum Location {LOW, HIGH}
+    public enum Location {LOW, HIGH}
 
     public void init(HardwareMap hardwareMap, Telemetry telemetry) {
         verticalLinear.init(hardwareMap,telemetry);
@@ -71,7 +70,7 @@ public class Deposit implements Part{
         claw.stop();
     }
 
-    public static void cmdDepositSample(Location location){
+    public void cmdDepositSample(Location location){
         if(verticalLinear.isBusy() || claw.isBusy()) return;
 
         verticalLinear.setBusy(true);

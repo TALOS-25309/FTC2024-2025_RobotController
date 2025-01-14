@@ -2,8 +2,10 @@ package org.firstinspires.ftc.teamcode.opmode.tele;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
+import org.apache.commons.math3.optim.nonlinear.scalar.gradient.NonLinearConjugateGradientOptimizer;
 import org.firstinspires.ftc.teamcode.feature.Schedule;
 import org.firstinspires.ftc.teamcode.feature.SmartGamepad;
+import org.firstinspires.ftc.teamcode.part.Deposit;
 import org.firstinspires.ftc.teamcode.part.Drive;
 import org.firstinspires.ftc.teamcode.part.Intake;
 import org.firstinspires.ftc.teamcode.part.Part;
@@ -11,6 +13,7 @@ import org.firstinspires.ftc.teamcode.part.Part;
 public class TeleOpMode extends OpMode {
     private Drive drive;
     private Intake intake;
+    private Deposit deposit;
 
     private Part[] part_list;
 
@@ -23,8 +26,9 @@ public class TeleOpMode extends OpMode {
 
         drive = new Drive();
         intake = new Intake();
+        deposit = new Deposit();
 
-        part_list = new Part[] { drive, intake };
+        part_list = new Part[] { drive, intake, deposit };
 
         for (Part part : part_list) {
             part.init(hardwareMap, telemetry);
@@ -83,6 +87,15 @@ public class TeleOpMode extends OpMode {
         }
 
         // Deposit
+        if (SmartGamepad.isPressed(smartGamepad2.gamepad().y, smartGamepad2.prev().y)) {
+            deposit.cmdDepositSpecimen(Deposit.Location.HIGH);
+        } else if (SmartGamepad.isPressed(smartGamepad2.gamepad().b, smartGamepad2.prev().b)) {
+            deposit.cmdDepositSpecimen(Deposit.Location.LOW);
+        } else if (SmartGamepad.isPressed(smartGamepad2.gamepad().x, smartGamepad2.prev().x)) {
+            deposit.cmdDepositSample(Deposit.Location.HIGH);
+        } else if (SmartGamepad.isPressed(smartGamepad2.gamepad().a, smartGamepad2.prev().a)) {
+            deposit.cmdDepositSample(Deposit.Location.LOW);
+        }
 
         // Manual Linear
         if (smartGamepad2.gamepad().left_stick_y > 0.2) {

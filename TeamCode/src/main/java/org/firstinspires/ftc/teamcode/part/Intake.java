@@ -87,7 +87,6 @@ public class Intake implements Part{
 
         double delay = 0;
 
-
         // 1. Stretch Linear
         Schedule.addTask(Intake::cmdAutoStretch, delay);
         delay += IntakeConstants.TIME1_1;
@@ -108,7 +107,7 @@ public class Intake implements Part{
 
         horizontalLinear.cmdSetMode(IntakeConstants.HorLinearMode.MANUAL);
 
-        // 1. Lower the Eater
+        // 1. Lower Eater
         Schedule.addTask(eater::cmdArmDown, delay);
         delay += IntakeConstants.TIME2_1;
 
@@ -136,15 +135,15 @@ public class Intake implements Part{
 
         horizontalLinear.cmdSetMode(IntakeConstants.HorLinearMode.MANUAL);
 
-        // 1. Run Eater Reversely
+        // 1. Remove from Eater
         Schedule.addTask(() -> {eater.cmdEaterRun(false);}, delay);
         delay += IntakeConstants.TIME3_1;
 
-        // 2
+        // 2. Raise Eater
         Schedule.addTask(eater::cmdArmUp, delay);
         delay += IntakeConstants.TIME3_2;
 
-        // 3
+        // 3. End
         Schedule.addTask(() -> {
             horizontalLinear.setBusy(false);
             eater.setBusy(false);
@@ -158,19 +157,19 @@ public class Intake implements Part{
 
         double delay = 0;
 
-        // 1
+        // 1. Raise Eater
         Schedule.addTask(eater::cmdArmUp, delay);
         delay += IntakeConstants.TIME4_1;
 
-        // 2
+        // 2. Retract Horizontal Linear
         Schedule.addTask(Intake::cmdAutoRetract, delay);
         delay += IntakeConstants.TIME4_2;
 
-        // 3
+        // 3. Remove from Eater
         Schedule.addTask(()->{eater.cmdEaterRun(false);},delay);
         delay += IntakeConstants.TIME4_3;
 
-        // 4
+        // 4. Close Claw...
         // Deposit의 집게가 잡기 -> Deposit Part에서 해결
 
         // 5. End

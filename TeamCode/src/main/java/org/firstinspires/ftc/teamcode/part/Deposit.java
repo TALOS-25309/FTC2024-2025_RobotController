@@ -132,7 +132,7 @@ public class Deposit implements Part{
         claw.setBusy(true);
 
         // 0. Wait Until Sample Comes
-        double delay = IntakeConstants.TIME4_1 + IntakeConstants.TIME4_2;
+        double delay = IntakeConstants.DELAY_LINEAR_RETRACT;
 
         // 1. Close Claw
         Schedule.addTask(claw::cmdClose, delay);

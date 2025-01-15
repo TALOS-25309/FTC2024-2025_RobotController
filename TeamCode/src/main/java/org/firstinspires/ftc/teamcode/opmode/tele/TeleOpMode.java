@@ -4,6 +4,7 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
 import org.firstinspires.ftc.teamcode.feature.Schedule;
 import org.firstinspires.ftc.teamcode.feature.SmartGamepad;
+import org.firstinspires.ftc.teamcode.global.Global;
 import org.firstinspires.ftc.teamcode.part.Deposit;
 import org.firstinspires.ftc.teamcode.part.Drive;
 import org.firstinspires.ftc.teamcode.part.Intake;
@@ -86,24 +87,33 @@ public class TeleOpMode extends OpMode {
     public void controlGamepad2() {
         // Intake
         if (SmartGamepad.isPressed(smartGamepad2.gamepad().dpad_up, smartGamepad2.prev().dpad_up)) {
-            intake.cmdRunNextStep();
-            if (intake.cmdGetCurrentStep() == 3) {
-                deposit.cmdGrabSample();
-            }
+            intake.cmdAutoStretch();
         }
         else if (SmartGamepad.isPressed(smartGamepad2.gamepad().dpad_down, smartGamepad2.prev().dpad_down)) {
-            intake.cmdRunPrevStep();
+            intake.cmdAutoRetract();
         }
 
         // Deposit
-        if (SmartGamepad.isPressed(smartGamepad2.gamepad().y, smartGamepad2.prev().y)) {
-            deposit.cmdDepositSpecimen(Deposit.Location.HIGH);
-        } else if (SmartGamepad.isPressed(smartGamepad2.gamepad().b, smartGamepad2.prev().b)) {
-            deposit.cmdDepositSpecimen(Deposit.Location.LOW);
-        } else if (SmartGamepad.isPressed(smartGamepad2.gamepad().x, smartGamepad2.prev().x)) {
-            deposit.cmdDepositSample(Deposit.Location.HIGH);
-        } else if (SmartGamepad.isPressed(smartGamepad2.gamepad().a, smartGamepad2.prev().a)) {
-            deposit.cmdDepositSample(Deposit.Location.LOW);
+        if (Global.robotState == Global.RobotState.INTAKE) {
+            if (SmartGamepad.isPressed(smartGamepad2.gamepad().triangle, smartGamepad2.prev().triangle)) {
+                intake.cmdIntakeSample();
+            } else if (SmartGamepad.isPressed(smartGamepad2.gamepad().circle, smartGamepad2.prev().circle)) {
+                intake.cmdIntakeSpecimen();
+            } else if (SmartGamepad.isPressed(smartGamepad2.gamepad().square, smartGamepad2.prev().square)) {
+                intake.cmdIntakeFreeAngle();
+            } else if (SmartGamepad.isPressed(smartGamepad2.gamepad().cross, smartGamepad2.prev().cross)) {
+                intake.cmdIntakeVomit();
+            }
+        } else {
+            if (SmartGamepad.isPressed(smartGamepad2.gamepad().triangle, smartGamepad2.prev().triangle)) {
+                deposit.cmdDepositSpecimen(Deposit.Location.HIGH);
+            } else if (SmartGamepad.isPressed(smartGamepad2.gamepad().circle, smartGamepad2.prev().circle)) {
+                deposit.cmdDepositSpecimen(Deposit.Location.LOW);
+            } else if (SmartGamepad.isPressed(smartGamepad2.gamepad().square, smartGamepad2.prev().square)) {
+                deposit.cmdDepositSample(Deposit.Location.HIGH);
+            } else if (SmartGamepad.isPressed(smartGamepad2.gamepad().cross, smartGamepad2.prev().cross)) {
+                deposit.cmdDepositSample(Deposit.Location.LOW);
+            }
         }
 
         // Manual Linear

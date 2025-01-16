@@ -17,48 +17,47 @@ class IntakeConstants {
     private IntakeConstants() {} // Prevent instantiation
 
     // Horizontal Linear
-    public static final double HOR_LINEAR_INNER_POSE = 0.0;
-    public static final double HOR_LINEAR_OUTER_POSE = 0.0;
+    public static double HOR_LINEAR_INNER_POSE = 0.0;
+    public static double HOR_LINEAR_OUTER_POSE = 0.0;
 
     public enum HorLinearMode { MANUAL, AUTO, EMERGENCY }
     public static HorLinearMode HOR_LINEAR_MODE = HorLinearMode.AUTO;
 
-    public static final double HOR_LINEAR_AUTO_SPEED = 0.6;
-    public static final double HOR_LINEAR_MANUAL_SPEED = 0.3;
+    public static double HOR_LINEAR_AUTO_SPEED = 0.6;
+    public static double HOR_LINEAR_MANUAL_SPEED = 0.3;
 
-    public static final double HOR_LINEAR_kP = 1.0 * 0.001;
+    public static double HOR_LINEAR_kP = 1.0 * 0.001;
 
     // Eater
-    public static final double EATER_ARM_DOWN_POSE = 0.0;
-    public static final double EATER_ARM_NEUTRAL_POSE = 0.5;
-    public static final double EATER_ARM_UP_POSE = 1.0;
+    public static double EATER_ARM_DOWN_POSE = 0.7;
+    public static double EATER_ARM_NEUTRAL_POSE = 0.5;
+    public static double EATER_ARM_UP_POSE = 0.3;
 
-    public static final double EATER_HAND_DOWN_POSE = 0.0;
-    public static final double EATER_HAND_NEUTRAL_POSE = 0.5;
-    public static final double EATER_HAND_UP_POSE = 1.0;
+    public static double EATER_ARM_ANGLE_CONSTANT = 0.045;
 
-    public static final double EATER_ANGLE_UP = 0.5;
-    public static final double EATER_ANGLE_SPECIMEN = 1.0;
-    public static final double EATER_ANGLE_SAMPLE = 0.0;
+    public static double EATER_HAND_DOWN_POSE = 1.0;
+    public static double EATER_HAND_NEUTRAL_POSE = 0.5;
+    public static double EATER_HAND_UP_POSE = 0.08;
 
-    public static final double EATER_SPEED = 0.5;
+    public static double EATER_ANGLE_UP = 0.5;
+    public static double EATER_ANGLE_SPECIMEN = 0.83;
+    public static double EATER_ANGLE_SAMPLE = 0.16;
 
-    public static final double EATER_HAND_SPEED = 0.02;
+    public static double EATER_SPEED = 0.5;
+
+    public static double EATER_HAND_SPEED = 0.02;
+
 
     //DELAY
-    public static final long DELAY_LINEAR_RETRACT = 100;
-    public static final long DELAY_ARM_UP = 100;
+    public static double DELAY_LINEAR_RETRACT = 0;
+    public static double DELAY_ARM_UP = 0;
+    public static double DELAY_ARM_REST = 2;
 }
 
 // Main Part
 public class Intake implements Part{
     private static final HorizontalLinear horizontalLinear = new HorizontalLinear();
     private static final Eater eater = new Eater();
-
-    private static int currentStep = 3;
-    private static int previousStep = 3;
-    private int[] nextStep = {1, 3, 1, 0};
-    private int[] backStep = {0, 2, 0, 3};
 
     private Vision.SampleColor targetColor = Vision.SampleColor.YELLOW;
 
@@ -107,6 +106,8 @@ public class Intake implements Part{
 
         Schedule.addTask(horizontalLinear::cmdRetract, IntakeConstants.DELAY_LINEAR_RETRACT);
         Schedule.addTask(eater::cmdArmUp, IntakeConstants.DELAY_ARM_UP);
+
+        Schedule.addTask(eater::cmdArmNeutral, IntakeConstants.DELAY_ARM_REST);
     }
     public void cmdAutoRotate() {
         eater.cmdHandAutoRotate();
@@ -221,6 +222,7 @@ class HorizontalLinear implements Part {
 
 // Sub Part
 class Eater implements Part {
+    private Telemetry telemetry;
 
     private Servo armServo1, armServo2;
     private Servo handServo, handRotationServo;
@@ -231,14 +233,25 @@ class Eater implements Part {
 
 
     public void init(HardwareMap hardwareMap, Telemetry telemetry) {
+        this.telemetry = telemetry;
+
         armServo1 = hardwareMap.get(Servo.class, "intakeArm1");
         armServo2 = hardwareMap.get(Servo.class, "intakeArm2");
         handServo = hardwareMap.get(Servo.class, "intakeHand");
         handRotationServo = hardwareMap.get(Servo.class, "intakeRotation");
         eaterServo = hardwareMap.get(CRServo.class, "intakeEater");
+
+        armServo1.setDirection(Servo.Direction.FORWARD);
+        armServo2.setDirection(Servo.Direction.REVERSE);
+
+        armServo1.setPosition(0.5 + IntakeConstants.EATER_ARM_ANGLE_CONSTANT);
+        armServo2.setPosition(0.5 - IntakeConstants.EATER_ARM_ANGLE_CONSTANT);
+        handServo.setPosition(0.5);
+        handRotationServo.setPosition(0.5);
     }
 
     public void update() {
+        telemetry.addLine("FUCK");
     }
 
     public void stop() {
@@ -273,8 +286,8 @@ class Eater implements Part {
 
         handServo.setPosition(IntakeConstants.EATER_HAND_UP_POSE);
 
-        armServo1.setPosition(IntakeConstants.EATER_ARM_UP_POSE);
-        armServo2.setPosition(IntakeConstants.EATER_ARM_UP_POSE);
+        armServo1.setPosition(IntakeConstants.EATER_ARM_UP_POSE + IntakeConstants.EATER_ARM_ANGLE_CONSTANT);
+        armServo2.setPosition(IntakeConstants.EATER_ARM_UP_POSE - IntakeConstants.EATER_ARM_ANGLE_CONSTANT);
     }
     public void cmdArmNeutral(){
         targetAngle = IntakeConstants.EATER_ANGLE_UP;
@@ -282,8 +295,8 @@ class Eater implements Part {
 
         handServo.setPosition(IntakeConstants.EATER_HAND_NEUTRAL_POSE);
 
-        armServo1.setPosition(IntakeConstants.EATER_ARM_NEUTRAL_POSE);
-        armServo2.setPosition(IntakeConstants.EATER_ARM_NEUTRAL_POSE);
+        armServo1.setPosition(IntakeConstants.EATER_ARM_NEUTRAL_POSE + IntakeConstants.EATER_ARM_ANGLE_CONSTANT);
+        armServo2.setPosition(IntakeConstants.EATER_ARM_NEUTRAL_POSE - IntakeConstants.EATER_ARM_ANGLE_CONSTANT);
     }
     public void cmdArmDownForSample(){
         targetAngle = IntakeConstants.EATER_ANGLE_SAMPLE;
@@ -291,8 +304,8 @@ class Eater implements Part {
 
         handServo.setPosition(IntakeConstants.EATER_HAND_DOWN_POSE);
 
-        armServo1.setPosition(IntakeConstants.EATER_ARM_DOWN_POSE);
-        armServo2.setPosition(IntakeConstants.EATER_ARM_DOWN_POSE);
+        armServo1.setPosition(IntakeConstants.EATER_ARM_DOWN_POSE + IntakeConstants.EATER_ARM_ANGLE_CONSTANT);
+        armServo2.setPosition(IntakeConstants.EATER_ARM_DOWN_POSE - IntakeConstants.EATER_ARM_ANGLE_CONSTANT);
     }
     public void cmdArmDownForSpecimen(){
         targetAngle = IntakeConstants.EATER_ANGLE_SPECIMEN;
@@ -300,16 +313,16 @@ class Eater implements Part {
 
         handServo.setPosition(IntakeConstants.EATER_HAND_DOWN_POSE);
 
-        armServo1.setPosition(IntakeConstants.EATER_ARM_DOWN_POSE);
-        armServo2.setPosition(IntakeConstants.EATER_ARM_DOWN_POSE);
+        armServo1.setPosition(IntakeConstants.EATER_ARM_DOWN_POSE + IntakeConstants.EATER_ARM_ANGLE_CONSTANT);
+        armServo2.setPosition(IntakeConstants.EATER_ARM_DOWN_POSE - IntakeConstants.EATER_ARM_ANGLE_CONSTANT);
     }
     public void cmdArmDownForFreeAngle(){
         handRotationServo.setPosition(targetAngle);
 
         handServo.setPosition(IntakeConstants.EATER_HAND_DOWN_POSE);
 
-        armServo1.setPosition(IntakeConstants.EATER_ARM_DOWN_POSE);
-        armServo2.setPosition(IntakeConstants.EATER_ARM_DOWN_POSE);
+        armServo1.setPosition(IntakeConstants.EATER_ARM_DOWN_POSE + IntakeConstants.EATER_ARM_ANGLE_CONSTANT);
+        armServo2.setPosition(IntakeConstants.EATER_ARM_DOWN_POSE - IntakeConstants.EATER_ARM_ANGLE_CONSTANT);
     }
     public void setBusy(boolean busy){
         isBusy = busy;

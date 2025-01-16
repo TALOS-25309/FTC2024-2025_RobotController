@@ -9,7 +9,7 @@ public class SmartGamepad {
 
     public SmartGamepad(Gamepad gamepad) {
         gamepadNow = gamepad;
-        gamepadLast = gamepad;
+        gamepadLast = new Gamepad();
     }
 
     public Gamepad gamepad() {
@@ -20,9 +20,8 @@ public class SmartGamepad {
         return gamepadLast;
     }
 
-    public void update(Gamepad gamepad) {
-        gamepadLast = gamepadNow;
-        gamepadNow = gamepad;
+    public void update() {
+        gamepadLast.copy(gamepadNow);
     }
 
     public static boolean isPressed(boolean now, boolean last) {

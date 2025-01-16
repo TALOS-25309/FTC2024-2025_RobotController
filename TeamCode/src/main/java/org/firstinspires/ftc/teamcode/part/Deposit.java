@@ -51,12 +51,18 @@ class DepositConstants{
 }
 
 public class Deposit implements Part{
-    public static final VerticalLinear verticalLinear = new VerticalLinear();
-    public static final Claw claw = new Claw();
+    private Telemetry telemetry;
+
+    private static final VerticalLinear verticalLinear = new VerticalLinear();
+    private static final Claw claw = new Claw();
 
     public enum Location {LOW, HIGH}
 
+    private boolean isBusy = false;
+
     public void init(HardwareMap hardwareMap, Telemetry telemetry) {
+        this.telemetry = telemetry;
+
         verticalLinear.init(hardwareMap,telemetry);
         claw.init(hardwareMap,telemetry);
     }
@@ -72,10 +78,9 @@ public class Deposit implements Part{
     }
 
     public void cmdDepositSample(Location location){
-        if(verticalLinear.isBusy() || claw.isBusy()) return;
+        if(!isBusy) return;
 
-        verticalLinear.setBusy(true);
-        claw.setBusy(true);
+        isBusy = true;
 
         double delay = 0;
 
@@ -95,15 +100,13 @@ public class Deposit implements Part{
 
         // 3. End
         Schedule.addTask(() -> {
-            verticalLinear.setBusy(false);
-            claw.setBusy(false);
+            isBusy = false;
         }, delay);
     }
     public void cmdDepositSpecimen(Location location){
-        if(verticalLinear.isBusy() || claw.isBusy()) return;
+        if(!isBusy) return;
 
-        verticalLinear.setBusy(true);
-        claw.setBusy(true);
+        isBusy = true;
 
         double delay = 0;
 
@@ -123,33 +126,30 @@ public class Deposit implements Part{
 
         // 3. End
         Schedule.addTask(() -> {
-            verticalLinear.setBusy(false);
-            claw.setBusy(false);
+            isBusy = false;
         }, delay);
     }
     public void cmdGrabSample() { // related to Intake.cmdTransfer
-        if (verticalLinear.isBusy() || claw.isBusy()) return;
+        if (isBusy) return;
 
-        claw.setBusy(true);
+        isBusy = true;
 
         // 0. Wait Until Sample Comes
-        double delay = IntakeConstants.DELAY_LINEAR_RETRACT;
+        double delay = IntakeConstants.DELAY_ARM_COMPLETE;
 
         // 1. Close Claw
         Schedule.addTask(claw::cmdClose, delay);
-        delay += DepositConstants.DEPOSIT_DELAY_CLOSE_CLAW;
+        delay = IntakeConstants.DELAY_ARM_REST;
 
         // 2. End
         Schedule.addTask(() -> {
-            verticalLinear.setBusy(false);
-            claw.setBusy(false);
+            isBusy = false;
         }, delay);
     }
     public void cmdReturn(){
-        if(verticalLinear.isBusy() || claw.isBusy()) return;
+        if(!isBusy) return;
 
-        verticalLinear.setBusy(true);
-        claw.setBusy(true);
+        isBusy = true;
 
         double delay = 0;
 
@@ -163,8 +163,7 @@ public class Deposit implements Part{
 
         // 3. End
         Schedule.addTask(() -> {
-            verticalLinear.setBusy(false);
-            claw.setBusy(false);
+            isBusy = false;
         }, delay);
     }
     public void cmdManualStretch(){
@@ -185,7 +184,6 @@ class VerticalLinear implements Part{
     private DcMotor motor1, motor2;
     private double targetPosition = DepositConstants.VER_LINEAR_BOTTOM_POSE;
 
-    private boolean isBusy = false;
     private boolean isUsingPID = false;
 
     public void init(HardwareMap hardwareMap, Telemetry telemetry) {
@@ -229,7 +227,6 @@ class VerticalLinear implements Part{
         motor2.setPower(0);
         this.isUsingPID = false;
         DepositConstants.VER_LINEAR_MODE = DepositConstants.VerLinearMode.EMERGENCY;
-        setBusy(false);
     }
 
     public void cmdStretchToHighBasket() {
@@ -284,26 +281,29 @@ class VerticalLinear implements Part{
             motor2.setPower(0);
         }
     }
-
-    public void setBusy(boolean busy) {
-        this.isBusy = busy;
-    }
-
-    public boolean isBusy() {
-        return this.isBusy;
-    }
 }
 
 class Claw implements Part{
 
-    private Servo servoHand;
-    private Servo servoArm;
+    private Telemetry telemetry;
 
-    private boolean isBusy = false;
+    private Servo servoHand;
+    private Servo servoArm1, servoArm2;
 
     public void init(HardwareMap hardwareMap, Telemetry telemetry) {
-        //servoHand = hardwareMap.get(Servo.class, "servoHandClaw");
-        //servoArm = hardwareMap.get(Servo.class, "servoArmClaw");
+        this.telemetry = telemetry;
+
+        servoHand = hardwareMap.get(Servo.class, "depositHand");
+        servoArm1 = hardwareMap.get(Servo.class, "depositArm1");
+        servoArm2 = hardwareMap.get(Servo.class, "depositArm2");
+
+        servoHand.setDirection(Servo.Direction.FORWARD);
+        servoArm1.setDirection(Servo.Direction.FORWARD);
+        servoArm2.setDirection(Servo.Direction.REVERSE);
+
+        servoHand.setPosition(DepositConstants.CLAW_OPEN_POS);
+        servoArm1.setPosition(DepositConstants.CLAW_DOWN_POS);
+        servoArm2.setPosition(DepositConstants.CLAW_DOWN_POS);
     }
 
     public void update() {
@@ -312,7 +312,6 @@ class Claw implements Part{
 
     public void stop() {
         cmdOpen();
-        setBusy(false);
     }
 
     public void cmdOpen() {
@@ -324,19 +323,13 @@ class Claw implements Part{
     }
 
     public void cmdUp() {
-        servoArm.setPosition(DepositConstants.CLAW_UP_POS);
+        servoArm1.setPosition(DepositConstants.CLAW_UP_POS);
+        servoArm2.setPosition(DepositConstants.CLAW_UP_POS);
     }
 
     public void cmdDown() {
-        servoArm.setPosition(DepositConstants.CLAW_DOWN_POS);
-    }
-
-    public void setBusy(boolean busy) {
-        isBusy = busy;
-    }
-
-    public boolean isBusy() {
-        return this.isBusy;
+        servoArm1.setPosition(DepositConstants.CLAW_DOWN_POS);
+        servoArm2.setPosition(DepositConstants.CLAW_DOWN_POS);
     }
 }
 

@@ -17,24 +17,24 @@ class DriveConstants {
     private DriveConstants() {} // Prevent instantiation
 
     // Motor Speed
-    public static final double MOTOR_SPEED = 1.0;
-    public static final double MOTOR_SPEED_SLOW = 0.5;
+    public static double MOTOR_SPEED = 1.0;
+    public static double MOTOR_SPEED_SLOW = 0.5;
 
     // X, Y, Omega Weight (Speed)
-    public static final double VX_WEIGHT = 1.0;
-    public static final double VY_WEIGHT = 1.0;
-    public static final double OMEGA_WEIGHT = 1.0;
+    public static double VX_WEIGHT = 1.0;
+    public static double VY_WEIGHT = 1.0;
+    public static double OMEGA_WEIGHT = 1.0;
 
     // Localization
-    public static final boolean USING_LOCALIZATION_BASED_DRIVE = true;
-    public static final Pose2d AUTO_INITIAL_POSITION = new Pose2d(0, 0, 0);
-    public static final Pose2d TELE_INITIAL_POSITION = new Pose2d(0, 0, 0);
+    public static boolean USING_LOCALIZATION_BASED_DRIVE = true;
+    public static Pose2d AUTO_INITIAL_POSITION = new Pose2d(0, 0, 0);
+    public static Pose2d TELE_INITIAL_POSITION = new Pose2d(0, 0, 0);
     public static Pose2d INITIAL_POSITION = AUTO_INITIAL_POSITION;
 
     // Trajectory Values
-    public static final Vector2d BASKET_POSITION = new Vector2d(-72, -72);
-    public static final double BASKET_RADIUS = 6;
-    public static final Vector2d SPECIMEN_POSITION = new Vector2d(0, 0);
+    public static Vector2d BASKET_POSITION = new Vector2d(-72, -72);
+    public static double BASKET_RADIUS = 6;
+    public static Vector2d SPECIMEN_POSITION = new Vector2d(0, 0);
 }
 
 public class Drive implements Part {
@@ -73,8 +73,6 @@ public class Drive implements Part {
         telemetry.addData("x", robotPose.getX());
         telemetry.addData("y", robotPose.getY());
         telemetry.addData("heading", robotPose.getHeading());
-
-        telemetry.update();
     }
 
     public void stop() {

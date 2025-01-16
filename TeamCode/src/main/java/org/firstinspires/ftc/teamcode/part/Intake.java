@@ -51,17 +51,20 @@ class IntakeConstants {
     //DELAY
     public static double DELAY_LINEAR_RETRACT = 0;
     public static double DELAY_ARM_UP = 0;
+    public static double DELAY_ARM_COMPLETE = 1;
     public static double DELAY_ARM_REST = 2;
 }
 
 // Main Part
 public class Intake implements Part{
-    private static final HorizontalLinear horizontalLinear = new HorizontalLinear();
-    private static final Eater eater = new Eater();
+    private Telemetry telemetry;
 
-    private Vision.SampleColor targetColor = Vision.SampleColor.YELLOW;
+    private final HorizontalLinear horizontalLinear = new HorizontalLinear();
+    private final Eater eater = new Eater();
 
     public void init(HardwareMap hardwareMap, Telemetry telemetry) {
+        this.telemetry = telemetry;
+
         horizontalLinear.init(hardwareMap, telemetry);
         eater.init(hardwareMap, telemetry);
     }
@@ -126,22 +129,19 @@ public class Intake implements Part{
     public void cmdManualRotate(int direction) {
         eater.cmdHandManualRotate(direction);
     }
-
-    public void setTargetColor(Vision.SampleColor color){
-        targetColor = color;
-    }
-
 }
 
 // Sub Part
 class HorizontalLinear implements Part {
+    private Telemetry telemetry;
 
     private DcMotor motor;
     private double targetPosition = IntakeConstants.HOR_LINEAR_INNER_POSE;
     private boolean isUsingPID = false;
-    private boolean isBusy = false;
 
     public void init(HardwareMap hardwareMap, Telemetry telemetry) {
+        this.telemetry = telemetry;
+
         motor = hardwareMap.get(DcMotor.class, "horizontalLinear");
 
         motor.setDirection(DcMotorSimple.Direction.FORWARD);
@@ -212,12 +212,6 @@ class HorizontalLinear implements Part {
             motor.setPower(0);
         }
     }
-    public void setBusy(boolean busy){
-        isBusy = busy;
-    }
-    public boolean isBusy(){
-        return isBusy;
-    }
 }
 
 // Sub Part
@@ -227,10 +221,8 @@ class Eater implements Part {
     private Servo armServo1, armServo2;
     private Servo handServo, handRotationServo;
     private CRServo eaterServo;
-    private boolean isBusy;
 
     private double targetAngle;
-
 
     public void init(HardwareMap hardwareMap, Telemetry telemetry) {
         this.telemetry = telemetry;
@@ -241,17 +233,19 @@ class Eater implements Part {
         handRotationServo = hardwareMap.get(Servo.class, "intakeRotation");
         eaterServo = hardwareMap.get(CRServo.class, "intakeEater");
 
+        handServo.setDirection(Servo.Direction.FORWARD);
+        handRotationServo.setDirection(Servo.Direction.FORWARD);
         armServo1.setDirection(Servo.Direction.FORWARD);
         armServo2.setDirection(Servo.Direction.REVERSE);
 
-        armServo1.setPosition(0.5 + IntakeConstants.EATER_ARM_ANGLE_CONSTANT);
-        armServo2.setPosition(0.5 - IntakeConstants.EATER_ARM_ANGLE_CONSTANT);
-        handServo.setPosition(0.5);
-        handRotationServo.setPosition(0.5);
+        armServo1.setPosition(IntakeConstants.EATER_ARM_NEUTRAL_POSE + IntakeConstants.EATER_ARM_ANGLE_CONSTANT);
+        armServo2.setPosition(IntakeConstants.EATER_ARM_NEUTRAL_POSE - IntakeConstants.EATER_ARM_ANGLE_CONSTANT);
+        handServo.setPosition(IntakeConstants.EATER_HAND_NEUTRAL_POSE);
+        handRotationServo.setPosition(IntakeConstants.EATER_ANGLE_UP);
     }
 
     public void update() {
-        telemetry.addLine("FUCK");
+
     }
 
     public void stop() {
@@ -323,11 +317,5 @@ class Eater implements Part {
 
         armServo1.setPosition(IntakeConstants.EATER_ARM_DOWN_POSE + IntakeConstants.EATER_ARM_ANGLE_CONSTANT);
         armServo2.setPosition(IntakeConstants.EATER_ARM_DOWN_POSE - IntakeConstants.EATER_ARM_ANGLE_CONSTANT);
-    }
-    public void setBusy(boolean busy){
-        isBusy = busy;
-    }
-    public boolean isBusy(){
-        return isBusy;
     }
 }

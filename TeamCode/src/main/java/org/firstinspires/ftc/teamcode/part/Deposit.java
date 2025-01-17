@@ -15,10 +15,10 @@ import org.firstinspires.ftc.teamcode.feature.Schedule;
 class DepositConstants{
     // Vertical Linear
     public static double VER_LINEAR_BOTTOM_POSE = 0.0;
-    public static double VER_LINEAR_HIGH_CHAMBER_POSE = 1.0;
-    public static double VER_LINEAR_LOW_CHAMBER_POSE = 1.0;
-    public static double VER_LINEAR_HIGH_BASKET_POSE = 0.0;
-    public static double VER_LINEAR_LOW_BASKET_POSE = 0.0;
+    public static double VER_LINEAR_HIGH_CHAMBER_POSE = 20000.0;
+    public static double VER_LINEAR_LOW_CHAMBER_POSE = 20000.0;
+    public static double VER_LINEAR_HIGH_BASKET_POSE = 20000.0;
+    public static double VER_LINEAR_LOW_BASKET_POSE = 20000.0;
 
     public enum VerLinearMode { MANUAL, AUTO, EMERGENCY }
     public static DepositConstants.VerLinearMode VER_LINEAR_MODE = DepositConstants.VerLinearMode.AUTO;
@@ -29,11 +29,14 @@ class DepositConstants{
     public static double VER_LINEAR_MANUAL_SPEED = 0.3;
 
     // Claw
-    public static double CLAW_OPEN_POS = 1.0;
-    public static double CLAW_CLOSED_POS = 0.0;
+    public static double CLAW_OPEN_POS = 0.4;
+    public static double CLAW_CLOSED_POS = 0.6;
 
-    public static double CLAW_UP_POS = 1.0;
-    public static double CLAW_DOWN_POS = 0.0;
+    public static double CLAW_ARM_UP_POS = 0.4;
+    public static double CLAW_ARM_DOWN_POS = 0.6;
+
+    public static double CLAW_HAND_UP_POS = 0.4;
+    public static double CLAW_HAND_DOWN_POS = 0.6;
 
 
     // Deposit Delays
@@ -78,7 +81,7 @@ public class Deposit implements Part{
     }
 
     public void cmdDepositSample(Location location){
-        if(!isBusy) return;
+        if(isBusy) return;
 
         isBusy = true;
 
@@ -104,17 +107,13 @@ public class Deposit implements Part{
         }, delay);
     }
     public void cmdDepositSpecimen(Location location){
-        if(!isBusy) return;
+        if(isBusy) return;
 
         isBusy = true;
 
         double delay = 0;
 
-//        // 1. Close Claw
-//        Schedule.addTask(claw::cmdClose, delay);
-//        delay += DepositConstants.DEPOSIT_DELAY_CLOSE_CLAW;
-
-        // 2. Go to Chamber
+        // 1. Go to Chamber
         Schedule.addTask(claw::cmdUp, delay);
         if (location == Location.LOW) {
             Schedule.addTask(verticalLinear::cmdStretchToLowChamber, delay);
@@ -124,7 +123,7 @@ public class Deposit implements Part{
             delay += DepositConstants.DEPOSIT_SPECIMEN_DELAY_GOTO_HIGH;
         }
 
-        // 3. End
+        // 2. End
         Schedule.addTask(() -> {
             isBusy = false;
         }, delay);
@@ -147,7 +146,7 @@ public class Deposit implements Part{
         }, delay);
     }
     public void cmdReturn(){
-        if(!isBusy) return;
+        if(isBusy) return;
 
         isBusy = true;
 
@@ -218,6 +217,10 @@ class VerticalLinear implements Part{
             }
             motor1.setPower(power);
             motor2.setPower(power);
+
+            this.telemetry.addData("Target", targetPosition);
+            this.telemetry.addData("Current Pos", motor1.getCurrentPosition());
+            this.telemetry.addData("Power", power);
         }
     }
 
@@ -230,26 +233,31 @@ class VerticalLinear implements Part{
     }
 
     public void cmdStretchToHighBasket() {
+        this.isUsingPID = true;
         DepositConstants.VER_LINEAR_MODE = DepositConstants.VerLinearMode.AUTO;
         this.targetPosition = DepositConstants.VER_LINEAR_HIGH_BASKET_POSE;
     }
 
     public void cmdStretchToLowBasket() {
+        this.isUsingPID = true;
         DepositConstants.VER_LINEAR_MODE = DepositConstants.VerLinearMode.AUTO;
         this.targetPosition = DepositConstants.VER_LINEAR_LOW_BASKET_POSE;
     }
 
     public void cmdStretchToLowChamber() {
+        this.isUsingPID = true;
         DepositConstants.VER_LINEAR_MODE = DepositConstants.VerLinearMode.AUTO;
         this.targetPosition = DepositConstants.VER_LINEAR_LOW_CHAMBER_POSE;
     }
 
     public void cmdStretchToHighChamber() {
+        this.isUsingPID = true;
         DepositConstants.VER_LINEAR_MODE = DepositConstants.VerLinearMode.AUTO;
         this.targetPosition = DepositConstants.VER_LINEAR_HIGH_CHAMBER_POSE;
     }
 
     public void cmdRetractToBottom() {
+        this.isUsingPID = true;
         DepositConstants.VER_LINEAR_MODE = DepositConstants.VerLinearMode.AUTO;
         this.targetPosition = DepositConstants.VER_LINEAR_BOTTOM_POSE;
     }
@@ -287,6 +295,7 @@ class Claw implements Part{
 
     private Telemetry telemetry;
 
+    private Servo servoClaw;
     private Servo servoHand;
     private Servo servoArm1, servoArm2;
 
@@ -296,14 +305,17 @@ class Claw implements Part{
         servoHand = hardwareMap.get(Servo.class, "depositHand");
         servoArm1 = hardwareMap.get(Servo.class, "depositArm1");
         servoArm2 = hardwareMap.get(Servo.class, "depositArm2");
+        servoClaw = hardwareMap.get(Servo.class, "depositClaw");
 
+        servoClaw.setDirection(Servo.Direction.FORWARD);
         servoHand.setDirection(Servo.Direction.FORWARD);
         servoArm1.setDirection(Servo.Direction.FORWARD);
         servoArm2.setDirection(Servo.Direction.REVERSE);
 
-        servoHand.setPosition(DepositConstants.CLAW_OPEN_POS);
-        servoArm1.setPosition(DepositConstants.CLAW_DOWN_POS);
-        servoArm2.setPosition(DepositConstants.CLAW_DOWN_POS);
+        servoClaw.setPosition(DepositConstants.CLAW_OPEN_POS);
+        servoHand.setPosition(DepositConstants.CLAW_HAND_DOWN_POS);
+        servoArm1.setPosition(DepositConstants.CLAW_ARM_DOWN_POS);
+        servoArm2.setPosition(DepositConstants.CLAW_ARM_DOWN_POS);
     }
 
     public void update() {
@@ -315,21 +327,23 @@ class Claw implements Part{
     }
 
     public void cmdOpen() {
-        servoHand.setPosition(DepositConstants.CLAW_OPEN_POS);
+        servoClaw.setPosition(DepositConstants.CLAW_OPEN_POS);
     }
 
     public void cmdClose() {
-        servoHand.setPosition(DepositConstants.CLAW_CLOSED_POS);
+        servoClaw.setPosition(DepositConstants.CLAW_CLOSED_POS);
     }
 
     public void cmdUp() {
-        servoArm1.setPosition(DepositConstants.CLAW_UP_POS);
-        servoArm2.setPosition(DepositConstants.CLAW_UP_POS);
+        servoHand.setPosition(DepositConstants.CLAW_HAND_UP_POS);
+        servoArm1.setPosition(DepositConstants.CLAW_ARM_UP_POS);
+        servoArm2.setPosition(DepositConstants.CLAW_ARM_UP_POS);
     }
 
     public void cmdDown() {
-        servoArm1.setPosition(DepositConstants.CLAW_DOWN_POS);
-        servoArm2.setPosition(DepositConstants.CLAW_DOWN_POS);
+        servoHand.setPosition(DepositConstants.CLAW_HAND_DOWN_POS);
+        servoArm1.setPosition(DepositConstants.CLAW_ARM_DOWN_POS);
+        servoArm2.setPosition(DepositConstants.CLAW_ARM_DOWN_POS);
     }
 }
 

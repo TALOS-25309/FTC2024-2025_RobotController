@@ -11,9 +11,9 @@ import org.firstinspires.ftc.teamcode.part.Drive;
 import org.firstinspires.ftc.teamcode.part.Intake;
 import org.firstinspires.ftc.teamcode.part.Part;
 
-@TeleOp(name = "TeleOp Test Jan 16. 8pm")
+@TeleOp(name = "TeleOp")
 public class TeleOpMode extends OpMode {
-    //private Drive drive;
+    private Drive drive;
     private Intake intake;
     private Deposit deposit;
 
@@ -26,12 +26,11 @@ public class TeleOpMode extends OpMode {
         smartGamepad1 = new SmartGamepad(gamepad1);
         smartGamepad2 = new SmartGamepad(gamepad2);
 
-//        drive = new Drive();
+        drive = new Drive();
         intake = new Intake();
         deposit = new Deposit();
 
-//        part_list = new Part[] { drive, intake, deposit };
-        part_list = new Part[] { intake, deposit };
+        part_list = new Part[] { drive, intake, deposit };
 
         for (Part part : part_list) {
             part.init(hardwareMap, telemetry);
@@ -45,7 +44,7 @@ public class TeleOpMode extends OpMode {
         }
         Schedule.update();
 
-//        contolGamepad1();
+        controlGamepad1();
         controlGamepad2();
 
         checkEmergency();
@@ -63,34 +62,34 @@ public class TeleOpMode extends OpMode {
         }
     }
 
-//    public void contolGamepad1() {
-//        // Standard Drive
-//        double x = Math.max(smartGamepad1.gamepad().left_stick_x, smartGamepad1.gamepad().right_stick_x);
-//        double y = Math.max(smartGamepad1.gamepad().left_stick_y, smartGamepad1.gamepad().right_stick_y);
-//        double rot = smartGamepad1.gamepad().left_trigger - smartGamepad1.gamepad().right_trigger;
-//        drive.cmdDrive(x, y, rot);
-//
-//        // Slow Drive
-//        x = smartGamepad1.gamepad().dpad_up ? 1 : smartGamepad1.gamepad().dpad_down ? -1 : 0;
-//        y = smartGamepad1.gamepad().dpad_left ? -1 : smartGamepad1.gamepad().dpad_right ? 1 : 0;
-//        drive.cmdDriveSlowly(x, y);
-//
-//        // Road Runner Macro
-//        if (SmartGamepad.isPressed(smartGamepad1.gamepad().triangle, smartGamepad1.prev().triangle)) {
-//            drive.cmdAutoAlignBasket();
-//        } else if (SmartGamepad.isPressed(smartGamepad1.gamepad().cross, smartGamepad1.prev().cross)) {
-//            drive.cmdAutoAlignSpecimen();
-//        }
-//
-//        // Rotate
-//        if (smartGamepad1.gamepad().left_trigger > 0) {
-//            drive.cmdDrive(0,0, smartGamepad1.gamepad().left_trigger);
-//        } else if (smartGamepad1.gamepad().right_trigger > 0) {
-//            drive.cmdDrive(0,0, smartGamepad1.gamepad().right_trigger);
-//        }
-//
-//        // Hanging
-//    }
+    public void controlGamepad1() {
+        // Standard Drive
+        double x = Math.max(smartGamepad1.gamepad().left_stick_x, smartGamepad1.gamepad().right_stick_x);
+        double y = Math.max(smartGamepad1.gamepad().left_stick_y, smartGamepad1.gamepad().right_stick_y);
+        double rot = smartGamepad1.gamepad().left_trigger - smartGamepad1.gamepad().right_trigger;
+        drive.cmdDrive(x, y, rot);
+
+        // Slow Drive
+        x = smartGamepad1.gamepad().dpad_up ? 1 : smartGamepad1.gamepad().dpad_down ? -1 : 0;
+        y = smartGamepad1.gamepad().dpad_left ? -1 : smartGamepad1.gamepad().dpad_right ? 1 : 0;
+        drive.cmdDriveSlowly(x, y);
+
+        // Road Runner Macro
+        if (SmartGamepad.isPressed(smartGamepad1.gamepad().triangle, smartGamepad1.prev().triangle)) {
+            drive.cmdAutoAlignBasket();
+        } else if (SmartGamepad.isPressed(smartGamepad1.gamepad().cross, smartGamepad1.prev().cross)) {
+            drive.cmdAutoAlignSpecimen();
+        }
+
+        // Rotate
+        if (smartGamepad1.gamepad().left_trigger > 0) {
+            drive.cmdDrive(0,0, smartGamepad1.gamepad().left_trigger);
+        } else if (smartGamepad1.gamepad().right_trigger > 0) {
+            drive.cmdDrive(0,0, smartGamepad1.gamepad().right_trigger);
+        }
+
+        // Hanging
+    }
 
     public void controlGamepad2() {
         // Intake
@@ -102,7 +101,7 @@ public class TeleOpMode extends OpMode {
         }
 
         // Deposit
-        if (Global.robotState == Global.RobotState.INTAKE || true) {
+        if (Global.robotState == Global.RobotState.INTAKE) {
             if (SmartGamepad.isPressed(smartGamepad2.gamepad().triangle, smartGamepad2.prev().triangle)) {
                 intake.cmdIntakeSample();
                 telemetry.addLine("TRIANGLE");
@@ -126,17 +125,17 @@ public class TeleOpMode extends OpMode {
         }
 
         // Manual Linear
-        if (smartGamepad2.gamepad().left_stick_y > 0.2) {
+        if (smartGamepad2.gamepad().left_stick_y < -0.2) {
             intake.cmdManualStretch();
-        } else if (smartGamepad2.gamepad().left_stick_y < -0.2) {
+        } else if (smartGamepad2.gamepad().left_stick_y > 0.2) {
             intake.cmdManualRetract();
         } else {
             intake.cmdManualStop();
         }
 
-        if (smartGamepad2.gamepad().right_stick_y > 0.2) {
+        if (smartGamepad2.gamepad().right_stick_y < -0.2) {
             deposit.cmdManualStretch();
-        } else if (smartGamepad2.gamepad().right_stick_y < -0.2) {
+        } else if (smartGamepad2.gamepad().right_stick_y > 0.2) {
             deposit.cmdManualRetract();
         } else {
             deposit.cmdManualStop();

@@ -55,6 +55,11 @@ public class Drive implements Part {
         rightRear = hardwareMap.get(DcMotor.class, "rightRear");
         rightFront = hardwareMap.get(DcMotor.class, "rightFront");
 
+        motors[0] = leftFront;
+        motors[1] = leftRear;
+        motors[2] = rightRear;
+        motors[3] = rightFront;
+
         for (DcMotor motor : motors) {
             motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
             motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);

@@ -29,19 +29,19 @@ class IntakeConstants {
     public static double HOR_LINEAR_kP = 1.0 * 0.001;
 
     // Eater
-    public static double EATER_ARM_DOWN_POSE = 0.7;
+    public static double EATER_ARM_DOWN_POSE = 0.275;
     public static double EATER_ARM_NEUTRAL_POSE = 0.5;
-    public static double EATER_ARM_UP_POSE = 0.3;
+    public static double EATER_ARM_UP_POSE = 0.8;
 
-    public static double EATER_ARM_ANGLE_CONSTANT = 0.045;
+    public static double EATER_ARM_ANGLE_CONSTANT = 0.043;
 
-    public static double EATER_HAND_DOWN_POSE = 1.0;
+    public static double EATER_HAND_DOWN_POSE = 0.7;
     public static double EATER_HAND_NEUTRAL_POSE = 0.5;
-    public static double EATER_HAND_UP_POSE = 0.08;
+    public static double EATER_HAND_UP_POSE = 0.0;
 
-    public static double EATER_ANGLE_UP = 0.5;
-    public static double EATER_ANGLE_SPECIMEN = 0.83;
-    public static double EATER_ANGLE_SAMPLE = 0.16;
+    public static double EATER_ANGLE_UP = 0.52;
+    public static double EATER_ANGLE_SPECIMEN = 0.2;
+    public static double EATER_ANGLE_SAMPLE = 0.85;
 
     public static double EATER_SPEED = 0.5;
 
@@ -53,6 +53,7 @@ class IntakeConstants {
     public static double DELAY_ARM_UP = 0;
     public static double DELAY_ARM_COMPLETE = 1;
     public static double DELAY_ARM_REST = 2;
+    public static double DELAY_ARM_ROTATION_AND_MOVEMENT = 0.5;
 }
 
 // Main Part
@@ -278,23 +279,23 @@ class Eater implements Part {
         targetAngle = IntakeConstants.EATER_ANGLE_UP;
         handRotationServo.setPosition(IntakeConstants.EATER_ANGLE_UP);
 
-        handServo.setPosition(IntakeConstants.EATER_HAND_UP_POSE);
+        Schedule.addTask(()->{handServo.setPosition(IntakeConstants.EATER_HAND_UP_POSE);}, IntakeConstants.DELAY_ARM_ROTATION_AND_MOVEMENT);
 
-        armServo1.setPosition(IntakeConstants.EATER_ARM_UP_POSE + IntakeConstants.EATER_ARM_ANGLE_CONSTANT);
-        armServo2.setPosition(IntakeConstants.EATER_ARM_UP_POSE - IntakeConstants.EATER_ARM_ANGLE_CONSTANT);
+        Schedule.addTask(()->{armServo1.setPosition(IntakeConstants.EATER_ARM_UP_POSE + IntakeConstants.EATER_ARM_ANGLE_CONSTANT);}, IntakeConstants.DELAY_ARM_ROTATION_AND_MOVEMENT);
+        Schedule.addTask(()->{armServo2.setPosition(IntakeConstants.EATER_ARM_UP_POSE - IntakeConstants.EATER_ARM_ANGLE_CONSTANT);}, IntakeConstants.DELAY_ARM_ROTATION_AND_MOVEMENT);
     }
     public void cmdArmNeutral(){
         targetAngle = IntakeConstants.EATER_ANGLE_UP;
         handRotationServo.setPosition(targetAngle);
 
-        handServo.setPosition(IntakeConstants.EATER_HAND_NEUTRAL_POSE);
+        Schedule.addTask(()->{handServo.setPosition(IntakeConstants.EATER_HAND_NEUTRAL_POSE);}, IntakeConstants.DELAY_ARM_ROTATION_AND_MOVEMENT);
 
-        armServo1.setPosition(IntakeConstants.EATER_ARM_NEUTRAL_POSE + IntakeConstants.EATER_ARM_ANGLE_CONSTANT);
-        armServo2.setPosition(IntakeConstants.EATER_ARM_NEUTRAL_POSE - IntakeConstants.EATER_ARM_ANGLE_CONSTANT);
+        Schedule.addTask(()->{armServo1.setPosition(IntakeConstants.EATER_ARM_NEUTRAL_POSE + IntakeConstants.EATER_ARM_ANGLE_CONSTANT);}, IntakeConstants.DELAY_ARM_ROTATION_AND_MOVEMENT);
+        Schedule.addTask(()->{armServo2.setPosition(IntakeConstants.EATER_ARM_NEUTRAL_POSE - IntakeConstants.EATER_ARM_ANGLE_CONSTANT);}, IntakeConstants.DELAY_ARM_ROTATION_AND_MOVEMENT);
     }
     public void cmdArmDownForSample(){
         targetAngle = IntakeConstants.EATER_ANGLE_SAMPLE;
-        handRotationServo.setPosition(targetAngle);
+        Schedule.addTask(()->{handRotationServo.setPosition(targetAngle);}, IntakeConstants.DELAY_ARM_ROTATION_AND_MOVEMENT);
 
         handServo.setPosition(IntakeConstants.EATER_HAND_DOWN_POSE);
 
@@ -303,7 +304,7 @@ class Eater implements Part {
     }
     public void cmdArmDownForSpecimen(){
         targetAngle = IntakeConstants.EATER_ANGLE_SPECIMEN;
-        handRotationServo.setPosition(targetAngle);
+        Schedule.addTask(()->{handRotationServo.setPosition(targetAngle);}, IntakeConstants.DELAY_ARM_ROTATION_AND_MOVEMENT);
 
         handServo.setPosition(IntakeConstants.EATER_HAND_DOWN_POSE);
 
@@ -311,7 +312,7 @@ class Eater implements Part {
         armServo2.setPosition(IntakeConstants.EATER_ARM_DOWN_POSE - IntakeConstants.EATER_ARM_ANGLE_CONSTANT);
     }
     public void cmdArmDownForFreeAngle(){
-        handRotationServo.setPosition(targetAngle);
+        Schedule.addTask(()->{handRotationServo.setPosition(targetAngle);}, IntakeConstants.DELAY_ARM_ROTATION_AND_MOVEMENT);
 
         handServo.setPosition(IntakeConstants.EATER_HAND_DOWN_POSE);
 

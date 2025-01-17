@@ -52,6 +52,8 @@ public class TeleOpMode extends OpMode {
         smartGamepad1.update();
         smartGamepad2.update();
 
+        telemetry.addData("STATE",Global.robotState);
+
         telemetry.update();
     }
 
@@ -92,19 +94,23 @@ public class TeleOpMode extends OpMode {
     }
 
     public void controlGamepad2() {
-        // Intake
+        // Auto Intake Linear
         if (SmartGamepad.isPressed(smartGamepad2.gamepad().dpad_up, smartGamepad2.prev().dpad_up)) {
-            intake.cmdAutoStretch();
+            if (Global.robotState == Global.RobotState.NONE) {
+                intake.cmdAutoStretch();
+            }
         }
         else if (SmartGamepad.isPressed(smartGamepad2.gamepad().dpad_down, smartGamepad2.prev().dpad_down)) {
-            intake.cmdAutoRetract();
+            if (Global.robotState == Global.RobotState.INTAKE){
+                intake.cmdAutoRetract();
+                deposit.cmdGrabSample();
+            }
         }
 
-        // Deposit
+        // Auto Intake
         if (Global.robotState == Global.RobotState.INTAKE) {
             if (SmartGamepad.isPressed(smartGamepad2.gamepad().triangle, smartGamepad2.prev().triangle)) {
                 intake.cmdIntakeSample();
-                telemetry.addLine("TRIANGLE");
             } else if (SmartGamepad.isPressed(smartGamepad2.gamepad().circle, smartGamepad2.prev().circle)) {
                 intake.cmdIntakeSpecimen();
             } else if (SmartGamepad.isPressed(smartGamepad2.gamepad().square, smartGamepad2.prev().square)) {
@@ -112,17 +118,31 @@ public class TeleOpMode extends OpMode {
             } else if (SmartGamepad.isPressed(smartGamepad2.gamepad().cross, smartGamepad2.prev().cross)) {
                 intake.cmdIntakeVomit();
             }
-        } else {
-            if (SmartGamepad.isPressed(smartGamepad2.gamepad().triangle, smartGamepad2.prev().triangle)) {
-                deposit.cmdDepositSpecimen(Deposit.Location.HIGH);
-            } else if (SmartGamepad.isPressed(smartGamepad2.gamepad().circle, smartGamepad2.prev().circle)) {
-                deposit.cmdDepositSpecimen(Deposit.Location.LOW);
-            } else if (SmartGamepad.isPressed(smartGamepad2.gamepad().square, smartGamepad2.prev().square)) {
-                deposit.cmdDepositSample(Deposit.Location.HIGH);
-            } else if (SmartGamepad.isPressed(smartGamepad2.gamepad().cross, smartGamepad2.prev().cross)) {
-                deposit.cmdDepositSample(Deposit.Location.LOW);
+        }
+        // Auto Deposit
+        else if (Global.robotState == Global.RobotState.DEPOSIT) {
+            if (!deposit.isStretched()) {
+                if (SmartGamepad.isPressed(smartGamepad2.gamepad().triangle, smartGamepad2.prev().triangle)) {
+                    deposit.cmdDepositSpecimen(Deposit.Location.HIGH);
+                } else if (SmartGamepad.isPressed(smartGamepad2.gamepad().circle, smartGamepad2.prev().circle)) {
+                    deposit.cmdDepositSpecimen(Deposit.Location.LOW);
+                } else if (SmartGamepad.isPressed(smartGamepad2.gamepad().square, smartGamepad2.prev().square)) {
+                    deposit.cmdDepositSample(Deposit.Location.HIGH);
+                } else if (SmartGamepad.isPressed(smartGamepad2.gamepad().cross, smartGamepad2.prev().cross)) {
+                    deposit.cmdDepositSample(Deposit.Location.LOW);
+                }
+            } else {
+                if( SmartGamepad.isPressed(smartGamepad2.gamepad().triangle, smartGamepad2.prev().triangle)
+                    || SmartGamepad.isPressed(smartGamepad2.gamepad().circle, smartGamepad2.prev().circle)
+                    || SmartGamepad.isPressed(smartGamepad2.gamepad().square, smartGamepad2.prev().square)
+                    || SmartGamepad.isPressed(smartGamepad2.gamepad().cross, smartGamepad2.prev().cross)
+                ){
+                    telemetry.addLine("RETURN");
+                    deposit.cmdReturn();
+                }
             }
         }
+
 
         // Manual Linear
         if (smartGamepad2.gamepad().left_stick_y < -0.2) {

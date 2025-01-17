@@ -24,20 +24,20 @@ class IntakeConstants {
     public static HorLinearMode HOR_LINEAR_MODE = HorLinearMode.AUTO;
 
     public static double HOR_LINEAR_AUTO_SPEED = 0.6;
-    public static double HOR_LINEAR_MANUAL_SPEED = 0.3;
+    public static double HOR_LINEAR_MANUAL_SPEED = 0.5;
 
     public static double HOR_LINEAR_kP = 1.0 * 0.001;
 
     // Eater
-    public static double EATER_ARM_DOWN_POSE = 0.275;
+    public static double EATER_ARM_DOWN_POSE = 0.2;
     public static double EATER_ARM_NEUTRAL_POSE = 0.5;
-    public static double EATER_ARM_UP_POSE = 0.8;
+    public static double EATER_ARM_UP_POSE = 0.61;
 
-    public static double EATER_ARM_ANGLE_CONSTANT = 0.043;
+    public static double EATER_ARM_ANGLE_CONSTANT = 0;
 
-    public static double EATER_HAND_DOWN_POSE = 0.7;
+    public static double EATER_HAND_DOWN_POSE = 0.2;
     public static double EATER_HAND_NEUTRAL_POSE = 0.5;
-    public static double EATER_HAND_UP_POSE = 0.0;
+    public static double EATER_HAND_UP_POSE = 0.7;
 
     public static double EATER_ANGLE_UP = 0.52;
     public static double EATER_ANGLE_SPECIMEN = 0.2;
@@ -51,8 +51,8 @@ class IntakeConstants {
     //DELAY
     public static double DELAY_LINEAR_RETRACT = 0;
     public static double DELAY_ARM_UP = 0;
-    public static double DELAY_ARM_COMPLETE = 1;
-    public static double DELAY_ARM_REST = 2;
+    public static double DELAY_ARM_COMPLETE = 2;
+    public static double DELAY_ARM_REST = 5;
     public static double DELAY_ARM_ROTATION_AND_MOVEMENT = 0.5;
 }
 
@@ -103,7 +103,7 @@ public class Intake implements Part{
         horizontalLinear.cmdStretch();
     }
     public void cmdAutoRetract() {
-        Global.robotState = Global.RobotState.NONE;
+        Global.robotState = Global.RobotState.DEPOSIT;
         horizontalLinear.cmdSetMode(IntakeConstants.HorLinearMode.AUTO);
 
         eater.cmdEaterStop();

@@ -9,12 +9,13 @@ import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.feature.Schedule;
+import org.firstinspires.ftc.teamcode.global.Global;
 
 
 @Config
 class DepositConstants{
     // Vertical Linear
-    public static double VER_LINEAR_BOTTOM_POSE = 0.0;
+    public static double VER_LINEAR_BOTTOM_POSE = 100.0;
     public static double VER_LINEAR_HIGH_CHAMBER_POSE = 20000.0;
     public static double VER_LINEAR_LOW_CHAMBER_POSE = 20000.0;
     public static double VER_LINEAR_HIGH_BASKET_POSE = 20000.0;
@@ -23,33 +24,34 @@ class DepositConstants{
     public enum VerLinearMode { MANUAL, AUTO, EMERGENCY }
     public static DepositConstants.VerLinearMode VER_LINEAR_MODE = DepositConstants.VerLinearMode.AUTO;
 
-    public static double VER_LINEAR_kP = 1.0 * 0.001;
+    public static double VER_LINEAR_kP = 2.0 * 0.001;
 
-    public static double VER_LINEAR_AUTO_SPEED = 0.6;
-    public static double VER_LINEAR_MANUAL_SPEED = 0.3;
+    public static double VER_LINEAR_AUTO_SPEED = 0.8;
+    public static double VER_LINEAR_MANUAL_SPEED = 0.5;
+
+    public static double VER_HIGHTEST_LIMIT = 50000.0;
+    public static double VER_LOWEST_LIMIT = 0;
 
     // Claw
-    public static double CLAW_OPEN_POS = 0.4;
-    public static double CLAW_CLOSED_POS = 0.6;
+    public static double CLAW_OPEN_POS = 0.6;
+    public static double CLAW_CLOSED_POS = 0.4;
 
-    public static double CLAW_ARM_UP_POS = 0.4;
-    public static double CLAW_ARM_DOWN_POS = 0.6;
+    public static double CLAW_ARM_UP_POS = 0;
+    public static double CLAW_ARM_DOWN_POS = 1;
 
-    public static double CLAW_HAND_UP_POS = 0.4;
-    public static double CLAW_HAND_DOWN_POS = 0.6;
+    public static double CLAW_HAND_UP_POS = 0.7;
+    public static double CLAW_HAND_DOWN_POS = 0.7;
 
 
     // Deposit Delays
-    public static long DEPOSIT_DELAY_CLOSE_CLAW = 100;
+    public static double DEPOSIT_SAMPLE_DELAY_GOTO_LOW = 0.1;
+    public static double DEPOSIT_SAMPLE_DELAY_GOTO_HIGH = 0.1;
 
-    public static long DEPOSIT_SAMPLE_DELAY_GOTO_LOW = 100;
-    public static long DEPOSIT_SAMPLE_DELAY_GOTO_HIGH = 100;
+    public static double DEPOSIT_SPECIMEN_DELAY_GOTO_LOW = 0.1;
+    public static double DEPOSIT_SPECIMEN_DELAY_GOTO_HIGH = 0.1;
 
-    public static long DEPOSIT_SPECIMEN_DELAY_GOTO_LOW = 100;
-    public static long DEPOSIT_SPECIMEN_DELAY_GOTO_HIGH = 100;
-
-    public static long DEPOSIT_DELAY_OPEN_CLAW = 100;
-    public static long DEPOSIT_DELAY_RETRACT_LINEAR = 100;
+    public static double DEPOSIT_DELAY_OPEN_CLAW = 0.1;
+    public static double DEPOSIT_DELAY_RETRACT_LINEAR = 0.1;
 
 }
 
@@ -63,6 +65,8 @@ public class Deposit implements Part{
 
     private boolean isBusy = false;
 
+    private boolean isStretched = false;
+
     public void init(HardwareMap hardwareMap, Telemetry telemetry) {
         this.telemetry = telemetry;
 
@@ -73,6 +77,8 @@ public class Deposit implements Part{
     public void update(){
         verticalLinear.update();
         claw.update();
+
+        telemetry.addData("isStretched", isStretched);
     }
 
     public void stop() {
@@ -84,6 +90,7 @@ public class Deposit implements Part{
         if(isBusy) return;
 
         isBusy = true;
+        isStretched = true;
 
         double delay = 0;
 
@@ -110,6 +117,7 @@ public class Deposit implements Part{
         if(isBusy) return;
 
         isBusy = true;
+        isStretched = true;
 
         double delay = 0;
 
@@ -132,6 +140,8 @@ public class Deposit implements Part{
         if (isBusy) return;
 
         isBusy = true;
+        isStretched = false;
+        Global.robotState = Global.RobotState.DEPOSIT;
 
         // 0. Wait Until Sample Comes
         double delay = IntakeConstants.DELAY_ARM_COMPLETE;
@@ -148,7 +158,11 @@ public class Deposit implements Part{
     public void cmdReturn(){
         if(isBusy) return;
 
+        telemetry.addLine("return");
+
         isBusy = true;
+        isStretched = false;
+        Global.robotState = Global.RobotState.NONE;
 
         double delay = 0;
 
@@ -173,6 +187,10 @@ public class Deposit implements Part{
     }
     public void cmdManualStop(){
         verticalLinear.cmdManualStop();
+    }
+
+    public boolean isStretched() {
+        return this.isStretched;
     }
 }
 

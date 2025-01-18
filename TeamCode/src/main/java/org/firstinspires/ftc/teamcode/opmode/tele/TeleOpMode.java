@@ -44,19 +44,24 @@ public class TeleOpMode extends OpMode {
         }
         Schedule.update();
 
-        controlGamepad1();
-        Global.robotState = Global.RobotState.INTAKE;
-        controlGamepad2();
-
         checkEmergency();
 
+        if(!Global.IS_EMERGENCY) {
+            controlGamepad1();
+            Global.ROBOT_STATE = Global.RobotState.INTAKE;
+            controlGamepad2();
+        }
+
         smartGamepad1.update();
-        Global.robotState = Global.RobotState.INTAKE;
+        Global.ROBOT_STATE = Global.RobotState.INTAKE;
         smartGamepad2.update();
 
+        if (Global.PLAYER1_WARNING)
+            smartGamepad1.gamepad().rumble(100);
+        if (Global.PLAYER2_WARNING)
+            smartGamepad2.gamepad().rumble(100);
 
-        telemetry.addData("STATE",Global.robotState);
-
+        telemetry.addData("STATE",Global.ROBOT_STATE);
         telemetry.update();
     }
 
@@ -69,8 +74,12 @@ public class TeleOpMode extends OpMode {
 
     public void controlGamepad1() {
         // Standard Drive
-        double x = Math.max(smartGamepad1.gamepad().left_stick_x, smartGamepad1.gamepad().right_stick_x);
-        double y = Math.max(smartGamepad1.gamepad().left_stick_y, smartGamepad1.gamepad().right_stick_y);
+        double x = Math.abs(smartGamepad1.gamepad().left_stick_x) > Math.abs(smartGamepad1.gamepad().right_stick_x)
+                ? smartGamepad1.gamepad().left_stick_x
+                : smartGamepad1.gamepad().right_stick_x;
+        double y = Math.abs(smartGamepad1.gamepad().left_stick_y) > Math.abs(smartGamepad1.gamepad().right_stick_y)
+                ? smartGamepad1.gamepad().left_stick_y
+                : smartGamepad1.gamepad().right_stick_y;
         double rot = smartGamepad1.gamepad().left_trigger - smartGamepad1.gamepad().right_trigger;
         drive.cmdDrive(x, y, rot);
 
@@ -86,32 +95,30 @@ public class TeleOpMode extends OpMode {
             drive.cmdAutoAlignSpecimen();
         }
 
-        // Rotate
-        if (smartGamepad1.gamepad().left_trigger > 0) {
-            drive.cmdDrive(0,0, smartGamepad1.gamepad().left_trigger);
-        } else if (smartGamepad1.gamepad().right_trigger > 0) {
-            drive.cmdDrive(0,0, smartGamepad1.gamepad().right_trigger);
-        }
-
         // Hanging
     }
 
     public void controlGamepad2() {
-        // Auto Intake Linear
+
+        // Horizontal Linear
         if (SmartGamepad.isPressed(smartGamepad2.gamepad().dpad_up, smartGamepad2.prev().dpad_up)) {
-            if (Global.robotState == Global.RobotState.NONE) {
+            if (Global.ROBOT_STATE == Global.RobotState.NONE) {
                 intake.cmdAutoStretch();
+            } else {
+                Global.PLAYER2_WARNING = true;
             }
         }
         else if (SmartGamepad.isPressed(smartGamepad2.gamepad().dpad_down, smartGamepad2.prev().dpad_down)) {
-            if (Global.robotState == Global.RobotState.INTAKE){
+            if (Global.ROBOT_STATE == Global.RobotState.INTAKE){
                 intake.cmdAutoRetract();
                 deposit.cmdGrabSample();
+            } else {
+                Global.PLAYER2_WARNING = true;
             }
         }
 
         // Auto Intake
-        if (Global.robotState == Global.RobotState.INTAKE) {
+        if (Global.ROBOT_STATE == Global.RobotState.INTAKE) {
             if (SmartGamepad.isPressed(smartGamepad2.gamepad().triangle, smartGamepad2.prev().triangle)) {
                 intake.cmdIntakeSample();
             } else if (SmartGamepad.isPressed(smartGamepad2.gamepad().circle, smartGamepad2.prev().circle)) {
@@ -122,8 +129,9 @@ public class TeleOpMode extends OpMode {
                 intake.cmdIntakeVomit();
             }
         }
+
         // Auto Deposit
-        else if (Global.robotState == Global.RobotState.DEPOSIT) {
+        else if (Global.ROBOT_STATE == Global.RobotState.DEPOSIT) {
             if (!deposit.isStretched()) {
                 if (SmartGamepad.isPressed(smartGamepad2.gamepad().triangle, smartGamepad2.prev().triangle)) {
                     deposit.cmdDepositSpecimen(Deposit.Location.HIGH);
@@ -136,16 +144,21 @@ public class TeleOpMode extends OpMode {
                 }
             } else {
                 if( SmartGamepad.isPressed(smartGamepad2.gamepad().triangle, smartGamepad2.prev().triangle)
-                    || SmartGamepad.isPressed(smartGamepad2.gamepad().circle, smartGamepad2.prev().circle)
-                    || SmartGamepad.isPressed(smartGamepad2.gamepad().square, smartGamepad2.prev().square)
-                    || SmartGamepad.isPressed(smartGamepad2.gamepad().cross, smartGamepad2.prev().cross)
+                        || SmartGamepad.isPressed(smartGamepad2.gamepad().circle, smartGamepad2.prev().circle)
+                        || SmartGamepad.isPressed(smartGamepad2.gamepad().square, smartGamepad2.prev().square)
+                        || SmartGamepad.isPressed(smartGamepad2.gamepad().cross, smartGamepad2.prev().cross)
                 ){
-                    telemetry.addLine("RETURN");
                     deposit.cmdReturn();
                 }
             }
+        } else {
+            Global.PLAYER2_WARNING = true;
         }
 
+        // Auto Eater
+        if (smartGamepad2.gamepad().left_trigger > 0.5 && smartGamepad2.gamepad().right_trigger > 0.5) {
+            intake.cmdAutoRotate();
+        }
 
         // Manual Linear
         if (smartGamepad2.gamepad().left_stick_y < -0.2) {
@@ -170,14 +183,16 @@ public class TeleOpMode extends OpMode {
         } else if (smartGamepad2.gamepad().right_bumper) {
             intake.cmdManualRotate(+1);
         }
-
-        // Auto Eater
-        if (smartGamepad2.gamepad().left_trigger > 0.5 && smartGamepad2.gamepad().right_trigger > 0.5) {
-            intake.cmdAutoRotate();
-        }
     }
 
     public void checkEmergency() {
-
+        if (smartGamepad1.gamepad().left_bumper && smartGamepad1.gamepad().right_bumper) {
+            Global.IS_EMERGENCY = true;
+            for (Part part : part_list) {
+                part.stop();
+            }
+        } else {
+            Global.IS_EMERGENCY = false;
+        }
     }
 }

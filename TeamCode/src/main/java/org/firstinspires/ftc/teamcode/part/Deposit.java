@@ -9,6 +9,7 @@ import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.feature.Schedule;
+import org.firstinspires.ftc.teamcode.feature.SmartServo;
 import org.firstinspires.ftc.teamcode.global.Global;
 
 
@@ -87,18 +88,17 @@ public class Deposit implements Part{
     }
 
     public void cmdDepositSample(Location location){
-        if(isBusy) return;
+        if(isBusy) {
+            Global.PLAYER2_WARNING = true;
+            return;
+        }
 
         isBusy = true;
         isStretched = true;
 
         double delay = 0;
 
-//        // 1. Close Claw
-//        Schedule.addTask(claw::cmdClose, delay);
-//        delay += DepositConstants.DEPOSIT_DELAY_CLOSE_CLAW;
-
-        // 2. Go to Basket
+        // 1. Go to Basket
         Schedule.addTask(claw::cmdUp, delay);
         if(location == Location.LOW){
             Schedule.addTask(verticalLinear::cmdStretchToLowBasket, delay);
@@ -108,13 +108,16 @@ public class Deposit implements Part{
             delay += DepositConstants.DEPOSIT_SAMPLE_DELAY_GOTO_HIGH;
         }
 
-        // 3. End
+        // 2. End
         Schedule.addTask(() -> {
             isBusy = false;
         }, delay);
     }
     public void cmdDepositSpecimen(Location location){
-        if(isBusy) return;
+        if(isBusy) {
+            Global.PLAYER2_WARNING = true;
+            return;
+        }
 
         isBusy = true;
         isStretched = true;
@@ -137,11 +140,14 @@ public class Deposit implements Part{
         }, delay);
     }
     public void cmdGrabSample() { // related to Intake.cmdTransfer
-        if (isBusy) return;
+        if(isBusy) {
+            Global.PLAYER2_WARNING = true;
+            return;
+        }
 
         isBusy = true;
         isStretched = false;
-        Global.robotState = Global.RobotState.DEPOSIT;
+        Global.ROBOT_STATE = Global.RobotState.DEPOSIT;
 
         // 0. Wait Until Sample Comes
         double delay = IntakeConstants.DELAY_ARM_COMPLETE;
@@ -156,13 +162,14 @@ public class Deposit implements Part{
         }, delay);
     }
     public void cmdReturn(){
-        if(isBusy) return;
-
-        telemetry.addLine("return");
+        if(isBusy) {
+            Global.PLAYER2_WARNING = true;
+            return;
+        }
 
         isBusy = true;
         isStretched = false;
-        Global.robotState = Global.RobotState.NONE;
+        Global.ROBOT_STATE = Global.RobotState.NONE;
 
         double delay = 0;
 
@@ -313,22 +320,22 @@ class Claw implements Part{
 
     private Telemetry telemetry;
 
-    private Servo servoClaw;
-    private Servo servoHand;
-    private Servo servoArm1, servoArm2;
+    private SmartServo servoClaw;
+    private SmartServo servoHand;
+    private SmartServo servoArm1, servoArm2;
 
     public void init(HardwareMap hardwareMap, Telemetry telemetry) {
         this.telemetry = telemetry;
 
-        servoHand = hardwareMap.get(Servo.class, "depositHand");
-        servoArm1 = hardwareMap.get(Servo.class, "depositArm1");
-        servoArm2 = hardwareMap.get(Servo.class, "depositArm2");
-        servoClaw = hardwareMap.get(Servo.class, "depositClaw");
+        servoHand = new SmartServo(hardwareMap.get(Servo.class, "depositHand"));
+        servoArm1 = new SmartServo(hardwareMap.get(Servo.class, "depositArm1"));
+        servoArm2 = new SmartServo(hardwareMap.get(Servo.class, "depositArm2"));
+        servoClaw = new SmartServo(hardwareMap.get(Servo.class, "depositClaw"));
 
-        servoClaw.setDirection(Servo.Direction.FORWARD);
-        servoHand.setDirection(Servo.Direction.FORWARD);
-        servoArm1.setDirection(Servo.Direction.FORWARD);
-        servoArm2.setDirection(Servo.Direction.REVERSE);
+        servoClaw.Servo().setDirection(Servo.Direction.FORWARD);
+        servoHand.Servo().setDirection(Servo.Direction.FORWARD);
+        servoArm1.Servo().setDirection(Servo.Direction.FORWARD);
+        servoArm2.Servo().setDirection(Servo.Direction.REVERSE);
 
         servoClaw.setPosition(DepositConstants.CLAW_OPEN_POS);
         servoHand.setPosition(DepositConstants.CLAW_HAND_DOWN_POS);

@@ -9,6 +9,7 @@ import com.qualcomm.robotcore.hardware.CRServo;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.feature.Schedule;
+import org.firstinspires.ftc.teamcode.feature.SmartServo;
 import org.firstinspires.ftc.teamcode.feature.Vision;
 import org.firstinspires.ftc.teamcode.global.Global;
 
@@ -99,13 +100,13 @@ public class Intake implements Part{
         eater.cmdArmNeutral();
     }
     public void cmdAutoStretch() {
-        Global.robotState = Global.RobotState.INTAKE;
+        Global.ROBOT_STATE = Global.RobotState.INTAKE;
 
         horizontalLinear.cmdSetMode(IntakeConstants.HorLinearMode.AUTO);
         horizontalLinear.cmdStretch();
     }
     public void cmdAutoRetract() {
-        Global.robotState = Global.RobotState.DEPOSIT;
+        Global.ROBOT_STATE = Global.RobotState.DEPOSIT;
         horizontalLinear.cmdSetMode(IntakeConstants.HorLinearMode.AUTO);
 
         eater.cmdEaterStop();
@@ -221,8 +222,8 @@ class HorizontalLinear implements Part {
 class Eater implements Part {
     private Telemetry telemetry;
 
-    private Servo armServo1, armServo2;
-    private Servo handServo, handRotationServo;
+    private SmartServo armServo1, armServo2;
+    private SmartServo handServo, handRotationServo;
     private CRServo eaterServo;
 
     private double targetAngle;
@@ -230,16 +231,16 @@ class Eater implements Part {
     public void init(HardwareMap hardwareMap, Telemetry telemetry) {
         this.telemetry = telemetry;
 
-        armServo1 = hardwareMap.get(Servo.class, "intakeArm1");
-        armServo2 = hardwareMap.get(Servo.class, "intakeArm2");
-        handServo = hardwareMap.get(Servo.class, "intakeHand");
-        handRotationServo = hardwareMap.get(Servo.class, "intakeRotation");
+        armServo1 = new SmartServo(hardwareMap.get(Servo.class, "intakeArm1"));
+        armServo2 = new SmartServo(hardwareMap.get(Servo.class, "intakeArm2"));
+        handServo = new SmartServo(hardwareMap.get(Servo.class, "intakeHand"));
+        handRotationServo = new SmartServo(hardwareMap.get(Servo.class, "intakeRotation"));
         eaterServo = hardwareMap.get(CRServo.class, "intakeEater");
 
-        handServo.setDirection(Servo.Direction.FORWARD);
-        handRotationServo.setDirection(Servo.Direction.FORWARD);
-        armServo1.setDirection(Servo.Direction.FORWARD);
-        armServo2.setDirection(Servo.Direction.REVERSE);
+        handServo.Servo().setDirection(Servo.Direction.FORWARD);
+        handRotationServo.Servo().setDirection(Servo.Direction.FORWARD);
+        armServo1.Servo().setDirection(Servo.Direction.FORWARD);
+        armServo2.Servo().setDirection(Servo.Direction.REVERSE);
 
         armServo1.setPosition(IntakeConstants.EATER_ARM_NEUTRAL_POSE + IntakeConstants.EATER_ARM_ANGLE_CONSTANT);
         armServo2.setPosition(IntakeConstants.EATER_ARM_NEUTRAL_POSE - IntakeConstants.EATER_ARM_ANGLE_CONSTANT);

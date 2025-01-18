@@ -29,14 +29,16 @@ class IntakeConstants {
     public static double HOR_LINEAR_kP = 1.0 * 0.001;
 
     // Eater
-    public static double EATER_ARM_DOWN_POSE = 0.2;
+    public static double EATER_ARM_DOWN_POSE_SAMPLE = 0.19;
+    public static double EATER_ARM_DOWN_POSE_SPECIMEN = 0.23;
     public static double EATER_ARM_NEUTRAL_POSE = 0.5;
     public static double EATER_ARM_UP_POSE = 0.61;
 
     public static double EATER_ARM_ANGLE_CONSTANT = 0;
 
-    public static double EATER_HAND_DOWN_POSE = 0.2;
-    public static double EATER_HAND_NEUTRAL_POSE = 0.5;
+    public static double EATER_HAND_DOWN_POSE_SAMPLE = 0.3;
+    public static double EATER_HAND_DOWN_POSE_SPECIMEN = 0;
+    public static double EATER_HAND_NEUTRAL_POSE = 0.7;
     public static double EATER_HAND_UP_POSE = 0.7;
 
     public static double EATER_ANGLE_UP = 0.52;
@@ -297,26 +299,26 @@ class Eater implements Part {
         targetAngle = IntakeConstants.EATER_ANGLE_SAMPLE;
         Schedule.addTask(()->{handRotationServo.setPosition(targetAngle);}, IntakeConstants.DELAY_ARM_ROTATION_AND_MOVEMENT);
 
-        handServo.setPosition(IntakeConstants.EATER_HAND_DOWN_POSE);
+        handServo.setPosition(IntakeConstants.EATER_HAND_DOWN_POSE_SAMPLE);
 
-        armServo1.setPosition(IntakeConstants.EATER_ARM_DOWN_POSE + IntakeConstants.EATER_ARM_ANGLE_CONSTANT);
-        armServo2.setPosition(IntakeConstants.EATER_ARM_DOWN_POSE - IntakeConstants.EATER_ARM_ANGLE_CONSTANT);
+        armServo1.setPosition(IntakeConstants.EATER_ARM_DOWN_POSE_SAMPLE + IntakeConstants.EATER_ARM_ANGLE_CONSTANT);
+        armServo2.setPosition(IntakeConstants.EATER_ARM_DOWN_POSE_SAMPLE - IntakeConstants.EATER_ARM_ANGLE_CONSTANT);
     }
     public void cmdArmDownForSpecimen(){
         targetAngle = IntakeConstants.EATER_ANGLE_SPECIMEN;
         Schedule.addTask(()->{handRotationServo.setPosition(targetAngle);}, IntakeConstants.DELAY_ARM_ROTATION_AND_MOVEMENT);
 
-        handServo.setPosition(IntakeConstants.EATER_HAND_DOWN_POSE);
+        handServo.setPosition(IntakeConstants.EATER_HAND_DOWN_POSE_SPECIMEN);
 
-        armServo1.setPosition(IntakeConstants.EATER_ARM_DOWN_POSE + IntakeConstants.EATER_ARM_ANGLE_CONSTANT);
-        armServo2.setPosition(IntakeConstants.EATER_ARM_DOWN_POSE - IntakeConstants.EATER_ARM_ANGLE_CONSTANT);
+        armServo1.setPosition(IntakeConstants.EATER_ARM_DOWN_POSE_SPECIMEN + IntakeConstants.EATER_ARM_ANGLE_CONSTANT);
+        armServo2.setPosition(IntakeConstants.EATER_ARM_DOWN_POSE_SPECIMEN - IntakeConstants.EATER_ARM_ANGLE_CONSTANT);
     }
     public void cmdArmDownForFreeAngle(){
         Schedule.addTask(()->{handRotationServo.setPosition(targetAngle);}, IntakeConstants.DELAY_ARM_ROTATION_AND_MOVEMENT);
 
-        handServo.setPosition(IntakeConstants.EATER_HAND_DOWN_POSE);
+        handServo.setPosition(IntakeConstants.EATER_HAND_DOWN_POSE_SAMPLE);
 
-        armServo1.setPosition(IntakeConstants.EATER_ARM_DOWN_POSE + IntakeConstants.EATER_ARM_ANGLE_CONSTANT);
-        armServo2.setPosition(IntakeConstants.EATER_ARM_DOWN_POSE - IntakeConstants.EATER_ARM_ANGLE_CONSTANT);
+        armServo1.setPosition(IntakeConstants.EATER_ARM_DOWN_POSE_SAMPLE + IntakeConstants.EATER_ARM_ANGLE_CONSTANT);
+        armServo2.setPosition(IntakeConstants.EATER_ARM_DOWN_POSE_SAMPLE - IntakeConstants.EATER_ARM_ANGLE_CONSTANT);
     }
 }

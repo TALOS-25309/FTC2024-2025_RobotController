@@ -45,12 +45,15 @@ public class TeleOpMode extends OpMode {
         Schedule.update();
 
         controlGamepad1();
+        Global.robotState = Global.RobotState.INTAKE;
         controlGamepad2();
 
         checkEmergency();
 
         smartGamepad1.update();
+        Global.robotState = Global.RobotState.INTAKE;
         smartGamepad2.update();
+
 
         telemetry.addData("STATE",Global.robotState);
 

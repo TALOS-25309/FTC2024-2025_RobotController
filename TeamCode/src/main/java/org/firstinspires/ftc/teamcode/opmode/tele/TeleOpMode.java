@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.opmode.tele;
 
+import com.fasterxml.jackson.databind.jsonFormatVisitors.JsonMapFormatVisitor;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
@@ -104,26 +105,41 @@ public class TeleOpMode extends OpMode {
     }
 
     public void controlGamepad2() {
-
-        // Horizontal Linear
-        if (SmartGamepad.isPressed(smartGamepad2.gamepad().dpad_up, smartGamepad2.prev().dpad_up)) {
-            if (Global.ROBOT_STATE == Global.RobotState.NONE) {
-                intake.cmdAutoStretch();
-            } else {
-                Global.PLAYER2_WARNING = true;
+        if (Global.ROBOT_STATE == Global.RobotState.NONE){
+            // Horizontal Linear
+            if (SmartGamepad.isPressed(smartGamepad2.gamepad().dpad_up, smartGamepad2.prev().dpad_up)) {
+                if (Global.ROBOT_STATE == Global.RobotState.NONE) {
+                    intake.cmdAutoStretch();
+                } else {
+                    Global.PLAYER2_WARNING = true;
+                }
             }
-        }
-        else if (SmartGamepad.isPressed(smartGamepad2.gamepad().dpad_down, smartGamepad2.prev().dpad_down)) {
-            if (Global.ROBOT_STATE == Global.RobotState.INTAKE){
-                intake.cmdAutoRetract();
-                deposit.cmdGrabSample();
-            } else {
-                Global.PLAYER2_WARNING = true;
+            else if (SmartGamepad.isPressed(smartGamepad2.gamepad().dpad_down, smartGamepad2.prev().dpad_down)) {
+                if (Global.ROBOT_STATE == Global.RobotState.INTAKE){
+                    intake.cmdAutoRetract();
+                    deposit.cmdGrabSample();
+                } else {
+                    Global.PLAYER2_WARNING = true;
+                }
             }
+
+            // Manual Hor Linear
+            else if (smartGamepad2.gamepad().left_stick_y < -0.2) {
+                intake.cmdManualStretch();
+            } else if (smartGamepad2.gamepad().left_stick_y > 0.2) {
+                intake.cmdManualRetract();
+            } else if (-0.2 < smartGamepad2.gamepad().left_stick_y && smartGamepad2.gamepad().left_stick_y < 0.2) {
+                intake.cmdManualStop();
+            }
+
+            else if (!smartGamepad2.gamepad().atRest()) {
+                smartGamepad2.gamepad().rumble(500);
+            }
+
         }
 
-        // Auto Intake
-        if (Global.ROBOT_STATE == Global.RobotState.INTAKE) {
+        else if (Global.ROBOT_STATE == Global.RobotState.INTAKE) {
+            // Auto Intake
             if (SmartGamepad.isPressed(smartGamepad2.gamepad().triangle, smartGamepad2.prev().triangle)) {
                 intake.cmdIntakeSample();
             } else if (SmartGamepad.isPressed(smartGamepad2.gamepad().circle, smartGamepad2.prev().circle)) {
@@ -133,78 +149,86 @@ public class TeleOpMode extends OpMode {
             } else if (SmartGamepad.isPressed(smartGamepad2.gamepad().cross, smartGamepad2.prev().cross)) {
                 intake.cmdIntakeVomit();
             }
-        }
 
-        // Auto Deposit
-        else if (Global.ROBOT_STATE == Global.RobotState.DEPOSIT) {
-            if (!deposit.isStretched()) {
-                if (SmartGamepad.isPressed(smartGamepad2.gamepad().triangle, smartGamepad2.prev().triangle)) {
-                    deposit.cmdDepositSpecimen(Deposit.Location.HIGH);
-                } else if (SmartGamepad.isPressed(smartGamepad2.gamepad().circle, smartGamepad2.prev().circle)) {
-                    deposit.cmdDepositSpecimen(Deposit.Location.LOW);
-                } else if (SmartGamepad.isPressed(smartGamepad2.gamepad().square, smartGamepad2.prev().square)) {
-                    deposit.cmdDepositSample(Deposit.Location.HIGH);
-                } else if (SmartGamepad.isPressed(smartGamepad2.gamepad().cross, smartGamepad2.prev().cross)) {
-                    deposit.cmdDepositSample(Deposit.Location.LOW);
-                }
-            } else {
-                if( SmartGamepad.isPressed(smartGamepad2.gamepad().triangle, smartGamepad2.prev().triangle)
-                        || SmartGamepad.isPressed(smartGamepad2.gamepad().circle, smartGamepad2.prev().circle)
-                        || SmartGamepad.isPressed(smartGamepad2.gamepad().square, smartGamepad2.prev().square)
-                        || SmartGamepad.isPressed(smartGamepad2.gamepad().cross, smartGamepad2.prev().cross)
-                ){
-                    if(deposit.isSample())
-                        deposit.cmdReturnSample();
-                    else
-                        deposit.cmdReturnSpecimen();
-                }
+
+            // Manual Hor Linear
+            else if (smartGamepad2.gamepad().left_stick_y < -0.2) {
+                intake.cmdManualStretch();
+            } else if (smartGamepad2.gamepad().left_stick_y > 0.2) {
+                intake.cmdManualRetract();
+            } else if (-0.2 < smartGamepad2.gamepad().left_stick_y && smartGamepad2.gamepad().left_stick_y < 0.2) {
+                intake.cmdManualStop();
+            }
+
+            // Manual Eater
+            else if (smartGamepad2.gamepad().left_bumper) {
+                intake.cmdManualRotate(-1);
+            } else if (smartGamepad2.gamepad().right_bumper) {
+                intake.cmdManualRotate(+1);
+            }
+
+            // Auto Eater
+            else if (smartGamepad2.gamepad().left_trigger > 0.5 && smartGamepad2.gamepad().right_trigger > 0.5) {
+                if (Global.ROBOT_STATE == Global.RobotState.INTAKE)
+                    intake.cmdAutoRotate();
+                else
+                    Global.PLAYER2_WARNING = true;
+            }
+
+            else if(!smartGamepad2.gamepad().atRest()) {
+                smartGamepad2.gamepad().rumble(500);
             }
         }
 
+        else if (Global.ROBOT_STATE == Global.RobotState.DEPOSIT) {
+            // Auto Deposit
+            if( SmartGamepad.isPressed(smartGamepad2.gamepad().triangle, smartGamepad2.prev().triangle)
+                    || SmartGamepad.isPressed(smartGamepad2.gamepad().circle, smartGamepad2.prev().circle)
+                    || SmartGamepad.isPressed(smartGamepad2.gamepad().square, smartGamepad2.prev().square)
+                    || SmartGamepad.isPressed(smartGamepad2.gamepad().cross, smartGamepad2.prev().cross)
+            ) {
+                if (!deposit.isStretched()) {
+                    if (SmartGamepad.isPressed(smartGamepad2.gamepad().triangle, smartGamepad2.prev().triangle)) {
+                        deposit.cmdDepositSpecimen(Deposit.Location.HIGH);
+                    } else if (SmartGamepad.isPressed(smartGamepad2.gamepad().circle, smartGamepad2.prev().circle)) {
+                        deposit.cmdDepositSpecimen(Deposit.Location.LOW);
+                    } else if (SmartGamepad.isPressed(smartGamepad2.gamepad().square, smartGamepad2.prev().square)) {
+                        deposit.cmdDepositSample(Deposit.Location.HIGH);
+                    } else if (SmartGamepad.isPressed(smartGamepad2.gamepad().cross, smartGamepad2.prev().cross)) {
+                        deposit.cmdDepositSample(Deposit.Location.LOW);
+                    }
+                } else {
+                    if (SmartGamepad.isPressed(smartGamepad2.gamepad().triangle, smartGamepad2.prev().triangle)
+                            || SmartGamepad.isPressed(smartGamepad2.gamepad().circle, smartGamepad2.prev().circle)
+                            || SmartGamepad.isPressed(smartGamepad2.gamepad().square, smartGamepad2.prev().square)
+                            || SmartGamepad.isPressed(smartGamepad2.gamepad().cross, smartGamepad2.prev().cross)
+                    ) {
+                        if (deposit.isSample())
+                            deposit.cmdReturnSample();
+                        else
+                            deposit.cmdReturnSpecimen();
+                    }
+                }
+            }
 
-        // Manual Hor Linear
-        if (smartGamepad2.gamepad().left_stick_y < -0.2) {
-            intake.cmdManualStretch();
-        } else if (smartGamepad2.gamepad().left_stick_y > 0.2) {
-            intake.cmdManualRetract();
-        } else {
-            intake.cmdManualStop();
-        }
+            // Manual Ver Linear
+            else if (smartGamepad2.gamepad().right_stick_y < -0.2) {
+                if(Global.ROBOT_STATE == Global.RobotState.DEPOSIT)
+                    deposit.cmdManualStretch();
+                else
+                    Global.PLAYER2_WARNING = true;
+            } else if (smartGamepad2.gamepad().right_stick_y > 0.2) {
+                if(Global.ROBOT_STATE == Global.RobotState.DEPOSIT)
+                    deposit.cmdManualRetract();
+                else
+                    Global.PLAYER2_WARNING = true;
+            } else if (-0.2 < smartGamepad2.gamepad().left_stick_y && smartGamepad2.gamepad().left_stick_y < 0.2) {
+                deposit.cmdManualStop();
+            }
 
-        // Manual Ver Linear
-        if (smartGamepad2.gamepad().right_stick_y < -0.2) {
-            if(Global.ROBOT_STATE == Global.RobotState.DEPOSIT)
-                deposit.cmdManualStretch();
-            else
-                Global.PLAYER2_WARNING = true;
-        } else if (smartGamepad2.gamepad().right_stick_y > 0.2) {
-            if(Global.ROBOT_STATE == Global.RobotState.DEPOSIT)
-                deposit.cmdManualRetract();
-            else
-                Global.PLAYER2_WARNING = true;
-        } else {
-            deposit.cmdManualStop();
-        }
-
-        // Manual Eater
-        if (smartGamepad2.gamepad().left_bumper) {
-            if (Global.ROBOT_STATE == Global.RobotState.INTAKE)
-                intake.cmdManualRotate(-1);
-            else
-                Global.PLAYER2_WARNING = true;
-        } else if (smartGamepad2.gamepad().right_bumper) {
-            if (Global.ROBOT_STATE == Global.RobotState.INTAKE)
-                intake.cmdManualRotate(+1);
-            else
-                Global.PLAYER2_WARNING = true;
-        }
-
-        // Auto Eater
-        if (smartGamepad2.gamepad().left_trigger > 0.5 && smartGamepad2.gamepad().right_trigger > 0.5) {
-            if (Global.ROBOT_STATE == Global.RobotState.INTAKE)
-                intake.cmdAutoRotate();
-            else
-                Global.PLAYER2_WARNING = true;
+            else if (!smartGamepad2.gamepad().atRest()){
+                smartGamepad2.gamepad().rumble(500);
+            }
         }
     }
 

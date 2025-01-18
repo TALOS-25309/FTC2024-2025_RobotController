@@ -39,4 +39,8 @@ public class SmartGamepad {
     public static boolean isFree(boolean now, boolean last) {
         return !now;
     }
+
+    public boolean isNotActive() {
+        return gamepadNow.atRest();
+    }
 }

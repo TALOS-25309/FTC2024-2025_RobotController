@@ -293,36 +293,42 @@ class VerticalLinear implements Part{
     }
 
     public void cmdStretchToHighBasket() {
+        if(Global.IS_TEST) return;
         this.isUsingPID = true;
         DepositConstants.VER_LINEAR_MODE = DepositConstants.VerLinearMode.AUTO;
         this.targetPosition = DepositConstants.VER_LINEAR_HIGH_BASKET_POSE;
     }
 
     public void cmdStretchToLowBasket() {
+        if(Global.IS_TEST) return;
         this.isUsingPID = true;
         DepositConstants.VER_LINEAR_MODE = DepositConstants.VerLinearMode.AUTO;
         this.targetPosition = DepositConstants.VER_LINEAR_LOW_BASKET_POSE;
     }
 
     public void cmdStretchToLowChamber() {
+        if(Global.IS_TEST) return;
         this.isUsingPID = true;
         DepositConstants.VER_LINEAR_MODE = DepositConstants.VerLinearMode.AUTO;
         this.targetPosition = DepositConstants.VER_LINEAR_LOW_CHAMBER_POSE;
     }
 
     public void cmdStretchToHighChamber() {
+        if(Global.IS_TEST) return;
         this.isUsingPID = true;
         DepositConstants.VER_LINEAR_MODE = DepositConstants.VerLinearMode.AUTO;
         this.targetPosition = DepositConstants.VER_LINEAR_HIGH_CHAMBER_POSE;
     }
 
     public void cmdRetractToBottom() {
+        if(Global.IS_TEST) return;
         this.isUsingPID = true;
         DepositConstants.VER_LINEAR_MODE = DepositConstants.VerLinearMode.AUTO;
         this.targetPosition = DepositConstants.VER_LINEAR_BOTTOM_POSE;
     }
 
     public void cmdStretch() {
+        if(Global.IS_TEST) return;
         this.isUsingPID = false;
         DepositConstants.VER_LINEAR_MODE = DepositConstants.VerLinearMode.MANUAL;
         motor1.setPower(DepositConstants.VER_LINEAR_MANUAL_SPEED);
@@ -335,6 +341,7 @@ class VerticalLinear implements Part{
     }
 
     public void cmdRetract() {
+        if(Global.IS_TEST) return;
         this.isUsingPID = false;
         DepositConstants.VER_LINEAR_MODE = DepositConstants.VerLinearMode.MANUAL;
         motor1.setPower(-DepositConstants.VER_LINEAR_MANUAL_SPEED);

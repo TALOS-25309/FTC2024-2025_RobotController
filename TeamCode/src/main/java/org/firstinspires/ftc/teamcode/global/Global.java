@@ -11,4 +11,6 @@ public class Global {
     public static boolean PLAYER2_WARNING = false;
 
     public static boolean IS_EMERGENCY = false;
+
+    public static boolean IS_TEST = false;
 }

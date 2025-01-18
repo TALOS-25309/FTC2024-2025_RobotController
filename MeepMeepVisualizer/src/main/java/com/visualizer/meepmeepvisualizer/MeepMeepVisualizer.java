@@ -15,21 +15,9 @@ public class MeepMeepVisualizer {
                 .setConstraints(60, 60, Math.toRadians(180), Math.toRadians(180), 15)
                 .build();
 
-        Vector2d robotPose = new Vector2d(-40, 40);
-        Vector2d BASKET_POSITION = new Vector2d(-72, -72);
+        Pose2d robotInitialPose = new Pose2d(-60, -36, Math.toRadians(0));
 
-        double BASKET_RADIUS = 24;
-
-        double dx = BASKET_POSITION.x - robotPose.x;
-        double dy = BASKET_POSITION.y - robotPose.y;
-        double angle = Math.atan2(dy, dx);
-
-        Vector2d target = new Vector2d(
-                BASKET_POSITION.x - Math.cos(angle) * BASKET_RADIUS,
-                BASKET_POSITION.y - Math.sin(angle) * BASKET_RADIUS);
-
-        myBot.runAction(myBot.getDrive().actionBuilder(new Pose2d(robotPose.x, robotPose.y, Math.toRadians(0)))
-                .splineTo(target, angle)
+        myBot.runAction(myBot.getDrive().actionBuilder(robotInitialPose)
                 .build());
 
         meepMeep.setBackground(MeepMeep.Background.FIELD_INTO_THE_DEEP_JUICE_LIGHT)

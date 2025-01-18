@@ -304,7 +304,7 @@ class VerticalLinear implements Part{
         DepositConstants.VER_LINEAR_MODE = DepositConstants.VerLinearMode.MANUAL;
         motor1.setPower(-DepositConstants.VER_LINEAR_MANUAL_SPEED);
         motor2.setPower(-DepositConstants.VER_LINEAR_MANUAL_SPEED);
-        
+
         if (motor1.getCurrentPosition() < DepositConstants.VER_LOWEST_LIMIT) {
             motor1.setPower(0);
             motor2.setPower(0);

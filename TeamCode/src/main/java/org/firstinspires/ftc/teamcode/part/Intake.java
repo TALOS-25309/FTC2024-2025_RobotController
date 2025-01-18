@@ -188,6 +188,7 @@ class HorizontalLinear implements Part {
         this.isUsingPID = true;
     }
     public void cmdStretch() {
+        if(Global.IS_TEST) return;
         if (IntakeConstants.HOR_LINEAR_MODE == IntakeConstants.HorLinearMode.AUTO) {
             this.targetPosition = IntakeConstants.HOR_LINEAR_OUTER_POSE;
             this.isUsingPID = true;
@@ -197,6 +198,7 @@ class HorizontalLinear implements Part {
         }
     }
     public void cmdRetract() {
+        if(Global.IS_TEST) return;
         if (IntakeConstants.HOR_LINEAR_MODE == IntakeConstants.HorLinearMode.AUTO) {
             this.targetPosition = IntakeConstants.HOR_LINEAR_INNER_POSE;
             this.isUsingPID = true;

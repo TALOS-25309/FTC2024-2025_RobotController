@@ -40,7 +40,7 @@ class DepositConstants{
     public static double CLAW_ARM_DOWN_POS = 1;
 
     public static double CLAW_HAND_UP_POS = 0.7;
-    public static double CLAW_HAND_DOWN_POS = 0.7;
+    public static double CLAW_HAND_DOWN_POS = 0;
 
 
     // Deposit Delays
@@ -78,7 +78,8 @@ public class Deposit implements Part{
     }
 
     public void update(){
-        verticalLinear.update();
+        if(!Global.IS_TEST)
+            verticalLinear.update();
         claw.update();
 
         telemetry.addData("isStretched", isStretched);
@@ -266,7 +267,7 @@ class VerticalLinear implements Part{
 
     public void update() {
         if (this.isUsingPID) {
-            double err = targetPosition - motor1.getCurrentPosition();
+            double err = targetPosition - getEncoderValue();
             double power = DepositConstants.VER_LINEAR_kP * err;
             if (DepositConstants.VER_LINEAR_MODE == DepositConstants.VerLinearMode.AUTO) {
                 if (power > 0) power = Math.min(power, DepositConstants.VER_LINEAR_AUTO_SPEED);
@@ -279,13 +280,13 @@ class VerticalLinear implements Part{
             motor2.setPower(power);
 
             this.telemetry.addData("Target", targetPosition);
-            this.telemetry.addData("Current Pos", motor1.getCurrentPosition());
+            this.telemetry.addData("Current Pos", getEncoderValue());
             this.telemetry.addData("Power", power);
         }
     }
 
     public void stop() {
-        this.targetPosition = motor1.getCurrentPosition();
+        this.targetPosition = getEncoderValue();
         motor1.setPower(0);
         motor2.setPower(0);
         this.isUsingPID = false;
@@ -334,7 +335,7 @@ class VerticalLinear implements Part{
         motor1.setPower(DepositConstants.VER_LINEAR_MANUAL_SPEED);
         motor2.setPower(DepositConstants.VER_LINEAR_MANUAL_SPEED);
 
-        if (motor1.getCurrentPosition() > DepositConstants.VER_HIGHTEST_LIMIT) {
+        if (getEncoderValue() > DepositConstants.VER_HIGHTEST_LIMIT) {
             motor1.setPower(0);
             motor2.setPower(0);
         }
@@ -347,7 +348,7 @@ class VerticalLinear implements Part{
         motor1.setPower(-DepositConstants.VER_LINEAR_MANUAL_SPEED);
         motor2.setPower(-DepositConstants.VER_LINEAR_MANUAL_SPEED);
 
-        if (motor1.getCurrentPosition() < DepositConstants.VER_LOWEST_LIMIT) {
+        if (getEncoderValue() < DepositConstants.VER_LOWEST_LIMIT) {
             motor1.setPower(0);
             motor2.setPower(0);
         }
@@ -355,16 +356,24 @@ class VerticalLinear implements Part{
 
     public void cmdManualStop() {
         if (DepositConstants.VER_LINEAR_MODE == DepositConstants.VerLinearMode.MANUAL) {
+            if (!this.isUsingPID) {
+                this.targetPosition = getEncoderValue();
+            }
             this.isUsingPID = true;
-            this.targetPosition = motor1.getCurrentPosition();
             motor1.setPower(0);
             motor2.setPower(0);
         } else if (DepositConstants.VER_LINEAR_MODE == DepositConstants.VerLinearMode.EMERGENCY) {
+            if (!this.isUsingPID) {
+                this.targetPosition = getEncoderValue();
+            }
             this.isUsingPID = false;
-            this.targetPosition = motor1.getCurrentPosition();
             motor1.setPower(0);
             motor2.setPower(0);
         }
+    }
+    
+    private int getEncoderValue() {
+        return -motor2.getCurrentPosition();
     }
 }
 

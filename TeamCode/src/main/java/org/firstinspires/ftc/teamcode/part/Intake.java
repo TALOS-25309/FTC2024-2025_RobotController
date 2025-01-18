@@ -74,7 +74,8 @@ public class Intake implements Part{
     }
 
     public void update() {
-        horizontalLinear.update();
+        if(!Global.IS_TEST)
+            horizontalLinear.update();
         eater.update();
     }
 

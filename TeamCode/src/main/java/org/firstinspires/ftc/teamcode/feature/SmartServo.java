@@ -42,7 +42,7 @@ public class SmartServo {
         return targetPosition;
     }
 
-    public Servo Servo() {
+    public Servo servo() {
         return servo;
     }
 

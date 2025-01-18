@@ -191,6 +191,10 @@ public class TeleOpMode extends OpMode {
             for (Part part : part_list) {
                 part.stop();
             }
+
+            smartGamepad1.gamepad().rumble(500);
+            smartGamepad2.gamepad().rumble(500);
+
         } else {
             Global.IS_EMERGENCY = false;
         }

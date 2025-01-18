@@ -332,10 +332,10 @@ class Claw implements Part{
         servoArm2 = new SmartServo(hardwareMap.get(Servo.class, "depositArm2"));
         servoClaw = new SmartServo(hardwareMap.get(Servo.class, "depositClaw"));
 
-        servoClaw.Servo().setDirection(Servo.Direction.FORWARD);
-        servoHand.Servo().setDirection(Servo.Direction.FORWARD);
-        servoArm1.Servo().setDirection(Servo.Direction.FORWARD);
-        servoArm2.Servo().setDirection(Servo.Direction.REVERSE);
+        servoClaw.servo().setDirection(Servo.Direction.FORWARD);
+        servoHand.servo().setDirection(Servo.Direction.FORWARD);
+        servoArm1.servo().setDirection(Servo.Direction.FORWARD);
+        servoArm2.servo().setDirection(Servo.Direction.REVERSE);
 
         servoClaw.setPosition(DepositConstants.CLAW_OPEN_POS);
         servoHand.setPosition(DepositConstants.CLAW_HAND_DOWN_POS);

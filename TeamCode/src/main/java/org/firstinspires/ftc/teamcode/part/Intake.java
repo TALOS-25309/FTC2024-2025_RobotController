@@ -237,10 +237,10 @@ class Eater implements Part {
         handRotationServo = new SmartServo(hardwareMap.get(Servo.class, "intakeRotation"));
         eaterServo = hardwareMap.get(CRServo.class, "intakeEater");
 
-        handServo.Servo().setDirection(Servo.Direction.FORWARD);
-        handRotationServo.Servo().setDirection(Servo.Direction.FORWARD);
-        armServo1.Servo().setDirection(Servo.Direction.FORWARD);
-        armServo2.Servo().setDirection(Servo.Direction.REVERSE);
+        handServo.servo().setDirection(Servo.Direction.FORWARD);
+        handRotationServo.servo().setDirection(Servo.Direction.FORWARD);
+        armServo1.servo().setDirection(Servo.Direction.FORWARD);
+        armServo2.servo().setDirection(Servo.Direction.REVERSE);
 
         armServo1.setPosition(IntakeConstants.EATER_ARM_NEUTRAL_POSE + IntakeConstants.EATER_ARM_ANGLE_CONSTANT);
         armServo2.setPosition(IntakeConstants.EATER_ARM_NEUTRAL_POSE - IntakeConstants.EATER_ARM_ANGLE_CONSTANT);

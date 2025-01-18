@@ -10,6 +10,7 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
+import org.firstinspires.ftc.teamcode.global.Global;
 import org.firstinspires.ftc.teamcode.trajectorysequence.TrajectorySequence;
 
 @Config
@@ -97,8 +98,10 @@ public class Drive implements Part {
 
     public void cmdDrive(double x, double y, double omega) {
         if (x != 0.0 || y != 0.0 || omega != 0.0) {
-            if (this.drive.isBusy())
+            if (this.drive.isBusy()){
                 this.drive.breakFollowing();
+                Global.PLAYER1_WARNING = true;
+            }
         }
 
         if (DriveConstants.USING_LOCALIZATION_BASED_DRIVE) {
@@ -128,8 +131,10 @@ public class Drive implements Part {
 
     public void cmdDriveSlowly(double x, double y) {
         if (x != 0.0 || y != 0.0) {
-            if (this.drive.isBusy())
+            if (this.drive.isBusy()){
                 this.drive.breakFollowing();
+                Global.PLAYER1_WARNING = true;
+            }
         }
 
         this.motors[0].setPower(x * DriveConstants.MOTOR_SPEED_SLOW - y * DriveConstants.MOTOR_SPEED_SLOW);

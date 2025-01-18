@@ -11,8 +11,6 @@ import org.firstinspires.ftc.teamcode.part.Drive;
 import org.firstinspires.ftc.teamcode.part.Intake;
 import org.firstinspires.ftc.teamcode.part.Part;
 
-import javax.microedition.khronos.opengles.GL;
-
 @TeleOp(name = "TeleOp")
 public class TeleOpMode extends OpMode {
     private Drive drive;
@@ -155,7 +153,10 @@ public class TeleOpMode extends OpMode {
                         || SmartGamepad.isPressed(smartGamepad2.gamepad().square, smartGamepad2.prev().square)
                         || SmartGamepad.isPressed(smartGamepad2.gamepad().cross, smartGamepad2.prev().cross)
                 ){
-                    deposit.cmdReturn();
+                    if(deposit.isSample())
+                        deposit.cmdReturnSample();
+                    else
+                        deposit.cmdReturnSpecimen();
                 }
             }
         }

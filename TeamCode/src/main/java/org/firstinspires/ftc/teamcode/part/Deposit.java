@@ -2,7 +2,6 @@ package org.firstinspires.ftc.teamcode.part;
 
 import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorImpl;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
@@ -52,7 +51,9 @@ class DepositConstants{
     public static double DEPOSIT_SPECIMEN_DELAY_GOTO_HIGH = 0.1;
 
     public static double DEPOSIT_DELAY_OPEN_CLAW = 0.1;
-    public static double DEPOSIT_DELAY_RETRACT_LINEAR = 0.1;
+    public static double DEPOSIT_DELAY_RETRACT_LINEAR_SAMPLE = 0.1;
+    public static double DEPOSIT_DELAY_RETRACT_LINEAR_SPECIMEN_1 = 0.05; //
+    public static double DEPOSIT_DELAY_RETRACT_LINEAR_SPECIMEN_2 = 0.1; //
 
 }
 
@@ -67,6 +68,7 @@ public class Deposit implements Part{
     private boolean isBusy = false;
 
     private boolean isStretched = false;
+    private boolean isSample = false;
 
     public void init(HardwareMap hardwareMap, Telemetry telemetry) {
         this.telemetry = telemetry;
@@ -95,6 +97,7 @@ public class Deposit implements Part{
 
         isBusy = true;
         isStretched = true;
+        isSample = true;
 
         double delay = 0;
 
@@ -121,6 +124,7 @@ public class Deposit implements Part{
 
         isBusy = true;
         isStretched = true;
+        isSample = false;
 
         double delay = 0;
 
@@ -161,7 +165,7 @@ public class Deposit implements Part{
             isBusy = false;
         }, delay);
     }
-    public void cmdReturn(){
+    public void cmdReturnSample(){
         if(isBusy) {
             Global.PLAYER2_WARNING = true;
             return;
@@ -180,12 +184,40 @@ public class Deposit implements Part{
         // 2. Retract Linear
         Schedule.addTask(claw::cmdDown, delay);
         Schedule.addTask(verticalLinear::cmdRetractToBottom, delay);
+        delay += DepositConstants.DEPOSIT_DELAY_RETRACT_LINEAR_SAMPLE;
 
         // 3. End
         Schedule.addTask(() -> {
             isBusy = false;
         }, delay);
     }
+    public void cmdReturnSpecimen(){
+        if(isBusy) {
+            Global.PLAYER2_WARNING = true;
+            return;
+        }
+
+        isBusy = true;
+        isStretched = false;
+        Global.ROBOT_STATE = Global.RobotState.NONE;
+
+        double delay = 0;
+
+        // 1. Retract Linear
+        Schedule.addTask(verticalLinear::cmdRetractToBottom, delay);
+        delay += DepositConstants.DEPOSIT_DELAY_RETRACT_LINEAR_SPECIMEN_2;
+
+        // 2. Open Claw (during 1)
+        Schedule.addTask(claw::cmdOpen, delay);
+        Schedule.addTask(claw::cmdDown, delay);
+        delay += DepositConstants.DEPOSIT_DELAY_RETRACT_LINEAR_SPECIMEN_1 - DepositConstants.DEPOSIT_DELAY_RETRACT_LINEAR_SPECIMEN_2;
+
+        // 3. End
+        Schedule.addTask(() -> {
+            isBusy = false;
+        }, delay);
+    }
+
     public void cmdManualStretch(){
         verticalLinear.cmdStretch();
     }
@@ -198,6 +230,9 @@ public class Deposit implements Part{
 
     public boolean isStretched() {
         return this.isStretched;
+    }
+    public boolean isSample() {
+        return this.isSample;
     }
 }
 

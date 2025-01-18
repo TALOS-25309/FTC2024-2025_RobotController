@@ -1,10 +1,14 @@
 package org.firstinspires.ftc.teamcode.opmode.tele;
 
+import com.acmerobotics.dashboard.FtcDashboard;
+import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
+import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.feature.Schedule;
 import org.firstinspires.ftc.teamcode.feature.SmartGamepad;
+import org.firstinspires.ftc.teamcode.feature.SmartServo;
 import org.firstinspires.ftc.teamcode.global.Global;
 import org.firstinspires.ftc.teamcode.part.Deposit;
 import org.firstinspires.ftc.teamcode.part.Drive;
@@ -13,6 +17,8 @@ import org.firstinspires.ftc.teamcode.part.Part;
 
 @TeleOp(name = "TeleOp")
 public class TeleOpMode extends OpMode {
+    private final FtcDashboard dashboard = FtcDashboard.getInstance();
+
     private Drive drive;
     private Intake intake;
     private Deposit deposit;
@@ -23,6 +29,8 @@ public class TeleOpMode extends OpMode {
 
     @Override
     public void init() {
+        telemetry = new MultipleTelemetry(this.telemetry, dashboard.getTelemetry());
+
         smartGamepad1 = new SmartGamepad(gamepad1);
         smartGamepad2 = new SmartGamepad(gamepad2);
 
@@ -65,6 +73,7 @@ public class TeleOpMode extends OpMode {
             Global.PLAYER2_WARNING = false;
         }
 
+        SmartServo.updateAll();
 
         telemetry.addData("STATE",Global.ROBOT_STATE);
         telemetry.update();

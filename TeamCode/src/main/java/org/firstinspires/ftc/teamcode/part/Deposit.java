@@ -14,46 +14,50 @@ import org.firstinspires.ftc.teamcode.global.Global;
 
 @Config
 class DepositConstants{
+
     // Vertical Linear
-    public static double VER_LINEAR_BOTTOM_POSE = 100.0;
-    public static double VER_LINEAR_HIGH_CHAMBER_POSE = 20000.0;
-    public static double VER_LINEAR_LOW_CHAMBER_POSE = 20000.0;
-    public static double VER_LINEAR_HIGH_BASKET_POSE = 20000.0;
-    public static double VER_LINEAR_LOW_BASKET_POSE = 20000.0;
+    public static int VER_LINEAR_BOTTOM_POSE = 500;
+    public static int VER_LINEAR_HIGH_CHAMBER_POSE = 0;
+    public static int VER_LINEAR_LOW_CHAMBER_POSE = 0;
+    public static int VER_LINEAR_HIGH_BASKET_POSE = 45000;
+    public static int VER_LINEAR_LOW_BASKET_POSE = 20000;
 
     public enum VerLinearMode { MANUAL, AUTO, EMERGENCY }
     public static DepositConstants.VerLinearMode VER_LINEAR_MODE = DepositConstants.VerLinearMode.AUTO;
 
-    public static double VER_LINEAR_kP = 2.0 * 0.001;
+    public static double VER_LINEAR_kP = 0.2;
+    public static double VER_LINEAR_kI = 0.1;
+    public static double VER_LINEAR_kD = 0;
+    public static int VER_ERROR_IGNORE = 499;
 
-    public static double VER_LINEAR_AUTO_SPEED = 0.8;
-    public static double VER_LINEAR_MANUAL_SPEED = 0.5;
+    public static double VER_LINEAR_AUTO_SPEED = 0.2;
+    public static double VER_LINEAR_MANUAL_SPEED = 0.2;
 
-    public static double VER_HIGHTEST_LIMIT = 50000.0;
-    public static double VER_LOWEST_LIMIT = 0;
+    public static double VER_LIMIT_HIGHTEST = 50000.0;
+    public static double VER_LIMIT_LOWEST = 500;
 
     // Claw
-    public static double CLAW_OPEN_POS = 0.6;
-    public static double CLAW_CLOSED_POS = 0.4;
+    public static double CLAW_CLAW_OPEN_POS = 0.9;
+    public static double CLAW_CLAW_CLOSED_POS = 0.68;
 
     public static double CLAW_ARM_UP_POS = 0;
     public static double CLAW_ARM_DOWN_POS = 1;
 
-    public static double CLAW_HAND_UP_POS = 0.7;
-    public static double CLAW_HAND_DOWN_POS = 0;
+    public static double CLAW_HAND_UP_POS = 0.65;
+    public static double CLAW_HAND_DOWN_POS = 0.65;
 
 
     // Deposit Delays
-    public static double DEPOSIT_SAMPLE_DELAY_GOTO_LOW = 0.1;
-    public static double DEPOSIT_SAMPLE_DELAY_GOTO_HIGH = 0.1;
+    public static double DELAY_DEPOSIT_SAMPLE_GOTO_LOW = 0.1;
+    public static double DELAY_DEPOSIT_SAMPLE_GOTO_HIGH = 0.1;
 
-    public static double DEPOSIT_SPECIMEN_DELAY_GOTO_LOW = 0.1;
-    public static double DEPOSIT_SPECIMEN_DELAY_GOTO_HIGH = 0.1;
+    public static double DELAY_DEPOSIT_SPECIMEN_GOTO_LOW = 0.1;
+    public static double DELAY_DEPOSIT_SPECIMEN_GOTO_HIGH = 0.1;
 
-    public static double DEPOSIT_DELAY_OPEN_CLAW = 0.1;
-    public static double DEPOSIT_DELAY_RETRACT_LINEAR_SAMPLE = 0.1;
-    public static double DEPOSIT_DELAY_RETRACT_LINEAR_SPECIMEN_1 = 0.05; //
-    public static double DEPOSIT_DELAY_RETRACT_LINEAR_SPECIMEN_2 = 0.1; //
+    public static double DELAY_DEPOSIT_OPEN_CLAW = 0.1;
+    public static double DELAY_DEPOSIT_RETRACT_LINEAR_SAMPLE = 0.1;
+    public static double DELAY_DEPOSIT_RETRACT_LINEAR_SPECIMEN_1 = 0.05; //
+    public static double DELAY_DEPOSIT_RETRACT_LINEAR_SPECIMEN_2 = 0.1; //
 
 }
 
@@ -106,10 +110,10 @@ public class Deposit implements Part{
         Schedule.addTask(claw::cmdUp, delay);
         if(location == Location.LOW){
             Schedule.addTask(verticalLinear::cmdStretchToLowBasket, delay);
-            delay += DepositConstants.DEPOSIT_SAMPLE_DELAY_GOTO_LOW;
+            delay += DepositConstants.DELAY_DEPOSIT_SAMPLE_GOTO_LOW;
         } else {
             Schedule.addTask(verticalLinear::cmdStretchToHighBasket, delay);
-            delay += DepositConstants.DEPOSIT_SAMPLE_DELAY_GOTO_HIGH;
+            delay += DepositConstants.DELAY_DEPOSIT_SAMPLE_GOTO_HIGH;
         }
 
         // 2. End
@@ -133,10 +137,10 @@ public class Deposit implements Part{
         Schedule.addTask(claw::cmdUp, delay);
         if (location == Location.LOW) {
             Schedule.addTask(verticalLinear::cmdStretchToLowChamber, delay);
-            delay += DepositConstants.DEPOSIT_SPECIMEN_DELAY_GOTO_LOW;
+            delay += DepositConstants.DELAY_DEPOSIT_SPECIMEN_GOTO_LOW;
         } else {
             Schedule.addTask(verticalLinear::cmdStretchToHighChamber, delay);
-            delay += DepositConstants.DEPOSIT_SPECIMEN_DELAY_GOTO_HIGH;
+            delay += DepositConstants.DELAY_DEPOSIT_SPECIMEN_GOTO_HIGH;
         }
 
         // 2. End
@@ -180,12 +184,12 @@ public class Deposit implements Part{
 
         // 1. Open Claw
         Schedule.addTask(claw::cmdOpen, delay);
-        delay += DepositConstants.DEPOSIT_DELAY_OPEN_CLAW;
+        delay += DepositConstants.DELAY_DEPOSIT_OPEN_CLAW;
 
         // 2. Retract Linear
         Schedule.addTask(claw::cmdDown, delay);
         Schedule.addTask(verticalLinear::cmdRetractToBottom, delay);
-        delay += DepositConstants.DEPOSIT_DELAY_RETRACT_LINEAR_SAMPLE;
+        delay += DepositConstants.DELAY_DEPOSIT_RETRACT_LINEAR_SAMPLE;
 
         // 3. End
         Schedule.addTask(() -> {
@@ -206,12 +210,12 @@ public class Deposit implements Part{
 
         // 1. Retract Linear
         Schedule.addTask(verticalLinear::cmdRetractToBottom, delay);
-        delay += DepositConstants.DEPOSIT_DELAY_RETRACT_LINEAR_SPECIMEN_2;
+        delay += DepositConstants.DELAY_DEPOSIT_RETRACT_LINEAR_SPECIMEN_2;
 
         // 2. Open Claw (during 1)
         Schedule.addTask(claw::cmdOpen, delay);
         Schedule.addTask(claw::cmdDown, delay);
-        delay += DepositConstants.DEPOSIT_DELAY_RETRACT_LINEAR_SPECIMEN_1 - DepositConstants.DEPOSIT_DELAY_RETRACT_LINEAR_SPECIMEN_2;
+        delay += DepositConstants.DELAY_DEPOSIT_RETRACT_LINEAR_SPECIMEN_1 - DepositConstants.DELAY_DEPOSIT_RETRACT_LINEAR_SPECIMEN_2;
 
         // 3. End
         Schedule.addTask(() -> {
@@ -242,9 +246,13 @@ class VerticalLinear implements Part{
     private Telemetry telemetry;
 
     private DcMotor motor1, motor2;
-    private double targetPosition = DepositConstants.VER_LINEAR_BOTTOM_POSE;
+    private int targetPosition = DepositConstants.VER_LINEAR_BOTTOM_POSE;
 
     private boolean isUsingPID = false;
+
+    private double errorSum = 0.0;
+    private double previousError = 0.0;
+    private double previousTime = 0.0;
 
     public void init(HardwareMap hardwareMap, Telemetry telemetry) {
         this.telemetry = telemetry;
@@ -253,10 +261,10 @@ class VerticalLinear implements Part{
         motor2 = hardwareMap.get(DcMotor.class, "verticalLinear2");
 
         motor1.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        motor1.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        motor1.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
 
         motor2.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        motor2.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        motor2.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
 
         motor1.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         motor2.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
@@ -267,8 +275,27 @@ class VerticalLinear implements Part{
 
     public void update() {
         if (this.isUsingPID) {
-            double err = targetPosition - getEncoderValue();
-            double power = DepositConstants.VER_LINEAR_kP * err;
+            double currentTime = (double)System.nanoTime() / 1e9;
+            double elapsedTime = currentTime - previousTime;
+
+            int err = targetPosition - getEncoderValue();
+            err /= DepositConstants.VER_ERROR_IGNORE;
+
+            double deltaErr = err - this.previousError;
+            this.errorSum += err * elapsedTime;
+            double differential = deltaErr / elapsedTime;
+
+            previousTime = currentTime;
+            previousError = err;
+
+            if(Math.abs(DepositConstants.VER_LINEAR_kP * err) > DepositConstants.VER_LINEAR_AUTO_SPEED) {
+                this.errorSum = 0;
+                differential = 0;
+            }
+
+            double power = DepositConstants.VER_LINEAR_kP * err
+                    + DepositConstants.VER_LINEAR_kI * errorSum
+                    + DepositConstants.VER_LINEAR_kD * differential;
             if (DepositConstants.VER_LINEAR_MODE == DepositConstants.VerLinearMode.AUTO) {
                 if (power > 0) power = Math.min(power, DepositConstants.VER_LINEAR_AUTO_SPEED);
                 else power = Math.max(power, -DepositConstants.VER_LINEAR_AUTO_SPEED);
@@ -282,6 +309,9 @@ class VerticalLinear implements Part{
             this.telemetry.addData("Target", targetPosition);
             this.telemetry.addData("Current Pos", getEncoderValue());
             this.telemetry.addData("Power", power);
+
+            telemetry.addData("Integral", this.errorSum);
+            telemetry.addData("Differential", differential);
         }
     }
 
@@ -298,6 +328,7 @@ class VerticalLinear implements Part{
         this.isUsingPID = true;
         DepositConstants.VER_LINEAR_MODE = DepositConstants.VerLinearMode.AUTO;
         this.targetPosition = DepositConstants.VER_LINEAR_HIGH_BASKET_POSE;
+        this.initPID();
     }
 
     public void cmdStretchToLowBasket() {
@@ -305,6 +336,7 @@ class VerticalLinear implements Part{
         this.isUsingPID = true;
         DepositConstants.VER_LINEAR_MODE = DepositConstants.VerLinearMode.AUTO;
         this.targetPosition = DepositConstants.VER_LINEAR_LOW_BASKET_POSE;
+        this.initPID();
     }
 
     public void cmdStretchToLowChamber() {
@@ -312,6 +344,7 @@ class VerticalLinear implements Part{
         this.isUsingPID = true;
         DepositConstants.VER_LINEAR_MODE = DepositConstants.VerLinearMode.AUTO;
         this.targetPosition = DepositConstants.VER_LINEAR_LOW_CHAMBER_POSE;
+        this.initPID();
     }
 
     public void cmdStretchToHighChamber() {
@@ -319,6 +352,7 @@ class VerticalLinear implements Part{
         this.isUsingPID = true;
         DepositConstants.VER_LINEAR_MODE = DepositConstants.VerLinearMode.AUTO;
         this.targetPosition = DepositConstants.VER_LINEAR_HIGH_CHAMBER_POSE;
+        this.initPID();
     }
 
     public void cmdRetractToBottom() {
@@ -326,6 +360,7 @@ class VerticalLinear implements Part{
         this.isUsingPID = true;
         DepositConstants.VER_LINEAR_MODE = DepositConstants.VerLinearMode.AUTO;
         this.targetPosition = DepositConstants.VER_LINEAR_BOTTOM_POSE;
+        this.initPID();
     }
 
     public void cmdStretch() {
@@ -335,7 +370,7 @@ class VerticalLinear implements Part{
         motor1.setPower(DepositConstants.VER_LINEAR_MANUAL_SPEED);
         motor2.setPower(DepositConstants.VER_LINEAR_MANUAL_SPEED);
 
-        if (getEncoderValue() > DepositConstants.VER_HIGHTEST_LIMIT) {
+        if (getEncoderValue() > DepositConstants.VER_LIMIT_HIGHTEST) {
             motor1.setPower(0);
             motor2.setPower(0);
         }
@@ -348,7 +383,7 @@ class VerticalLinear implements Part{
         motor1.setPower(-DepositConstants.VER_LINEAR_MANUAL_SPEED);
         motor2.setPower(-DepositConstants.VER_LINEAR_MANUAL_SPEED);
 
-        if (getEncoderValue() < DepositConstants.VER_LOWEST_LIMIT) {
+        if (getEncoderValue() < DepositConstants.VER_LIMIT_LOWEST) {
             motor1.setPower(0);
             motor2.setPower(0);
         }
@@ -358,6 +393,7 @@ class VerticalLinear implements Part{
         if (DepositConstants.VER_LINEAR_MODE == DepositConstants.VerLinearMode.MANUAL) {
             if (!this.isUsingPID) {
                 this.targetPosition = getEncoderValue();
+                this.initPID();
             }
             this.isUsingPID = true;
             motor1.setPower(0);
@@ -365,6 +401,7 @@ class VerticalLinear implements Part{
         } else if (DepositConstants.VER_LINEAR_MODE == DepositConstants.VerLinearMode.EMERGENCY) {
             if (!this.isUsingPID) {
                 this.targetPosition = getEncoderValue();
+                this.initPID();
             }
             this.isUsingPID = false;
             motor1.setPower(0);
@@ -374,6 +411,12 @@ class VerticalLinear implements Part{
     
     private int getEncoderValue() {
         return -motor2.getCurrentPosition();
+    }
+
+    private void initPID() {
+        this.errorSum = 0.0;
+        this.previousError = 0.0;
+        this.previousTime = (double)System.nanoTime() / 1e9;
     }
 }
 
@@ -388,17 +431,17 @@ class Claw implements Part{
     public void init(HardwareMap hardwareMap, Telemetry telemetry) {
         this.telemetry = telemetry;
 
-        servoHand = new SmartServo(hardwareMap.get(Servo.class, "depositHand"));
-        servoArm1 = new SmartServo(hardwareMap.get(Servo.class, "depositArm1"));
-        servoArm2 = new SmartServo(hardwareMap.get(Servo.class, "depositArm2"));
-        servoClaw = new SmartServo(hardwareMap.get(Servo.class, "depositClaw"));
+        servoHand = new SmartServo(hardwareMap.get(Servo.class, "depositHand"), "depositHand");
+        servoArm1 = new SmartServo(hardwareMap.get(Servo.class, "depositArm1"), "depositArm1");
+        servoArm2 = new SmartServo(hardwareMap.get(Servo.class, "depositArm2"), "depositArm2");
+        servoClaw = new SmartServo(hardwareMap.get(Servo.class, "depositClaw"), "depositClaw");
 
         servoClaw.servo().setDirection(Servo.Direction.FORWARD);
         servoHand.servo().setDirection(Servo.Direction.FORWARD);
         servoArm1.servo().setDirection(Servo.Direction.FORWARD);
         servoArm2.servo().setDirection(Servo.Direction.REVERSE);
 
-        servoClaw.setPosition(DepositConstants.CLAW_OPEN_POS);
+        servoClaw.setPosition(DepositConstants.CLAW_CLAW_OPEN_POS);
         servoHand.setPosition(DepositConstants.CLAW_HAND_DOWN_POS);
         servoArm1.setPosition(DepositConstants.CLAW_ARM_DOWN_POS);
         servoArm2.setPosition(DepositConstants.CLAW_ARM_DOWN_POS);
@@ -413,11 +456,11 @@ class Claw implements Part{
     }
 
     public void cmdOpen() {
-        servoClaw.setPosition(DepositConstants.CLAW_OPEN_POS);
+        servoClaw.setPosition(DepositConstants.CLAW_CLAW_OPEN_POS);
     }
 
     public void cmdClose() {
-        servoClaw.setPosition(DepositConstants.CLAW_CLOSED_POS);
+        servoClaw.setPosition(DepositConstants.CLAW_CLAW_CLOSED_POS);
     }
 
     public void cmdUp() {

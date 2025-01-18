@@ -2,6 +2,8 @@ package org.firstinspires.ftc.teamcode.feature;
 
 import com.qualcomm.robotcore.hardware.Servo;
 
+import java.util.Vector;
+
 public class SmartServo {
     private final Servo servo;
     private double position;
@@ -11,13 +13,19 @@ public class SmartServo {
     private long startTime;
     private long duration;
 
-    public SmartServo(Servo servo) {
+    private String name;
+    private static Vector<SmartServo> smartServos = new Vector<SmartServo>();
+
+    public SmartServo(Servo servo, String name) {
         this.servo = servo;
         this.position = 0.5;
         this.targetPosition = 0.5;
         this.previousPosition = 0.5;
         this.startTime = 0;
         this.duration = 0;
+
+        this.name = name;
+        smartServos.add(this);
     }
 
     public void setPosition(double position) {
@@ -27,7 +35,7 @@ public class SmartServo {
         servo.setPosition(position);
     }
 
-    public void serPosition(double position, double duration) {
+    public void setPosition(double position, double duration) {
         this.targetPosition = position;
         this.previousPosition = this.position;
         this.startTime = System.nanoTime();
@@ -59,5 +67,20 @@ public class SmartServo {
             position = (1 - progress) * this.previousPosition + progress * targetPosition;
         }
         servo.setPosition(position);
+    }
+
+    public static SmartServo getServoByName(String name) {
+        for (SmartServo smartServo : smartServos) {
+            if (smartServo.name.equals(name)) {
+                return smartServo;
+            }
+        }
+        return null;
+    }
+
+    public static void updateAll() {
+        for (SmartServo smartServo : smartServos) {
+            smartServo.update();
+        }
     }
 }

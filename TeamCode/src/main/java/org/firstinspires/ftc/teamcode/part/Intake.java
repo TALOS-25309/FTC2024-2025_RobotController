@@ -40,7 +40,7 @@ class IntakeConstants {
     public static double EATER_ARM_NEUTRAL_POSE = 0.5;
     public static double EATER_ARM_UP_POSE = 0.7;
 
-    public static double EATER_ARM_ANGLE_CONSTANT = 0;
+    public static double EATER_ARM_ANGLE_CONSTANT = -0.035;
 
     public static double EATER_HAND_DOWN_ROTATION = 0.5;
     public static double EATER_HAND_DOWN_POSE_SAMPLE = 0.3;

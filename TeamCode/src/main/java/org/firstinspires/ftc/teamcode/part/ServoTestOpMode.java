@@ -79,17 +79,17 @@ public class ServoTestOpMode extends OpMode {
         }
 
         if (Constants.INTAKE_ARM == Constants.INTAKE_MOVE.UP) {
-            SmartServo.getServoByName("intakeArm1").setPosition(IntakeConstants.EATER_ARM_UP_POSE);
-            SmartServo.getServoByName("intakeArm2").setPosition(IntakeConstants.EATER_ARM_UP_POSE);
+            SmartServo.getServoByName("intakeArm1").setPosition(IntakeConstants.EATER_ARM_UP_POSE + IntakeConstants.EATER_ARM_ANGLE_CONSTANT);
+            SmartServo.getServoByName("intakeArm2").setPosition(IntakeConstants.EATER_ARM_UP_POSE - IntakeConstants.EATER_ARM_ANGLE_CONSTANT);
         } else if (Constants.INTAKE_ARM == Constants.INTAKE_MOVE.DOWN_SAMPLE) {
-            SmartServo.getServoByName("intakeArm1").setPosition(IntakeConstants.EATER_ARM_DOWN_POSE_SAMPLE);
-            SmartServo.getServoByName("intakeArm2").setPosition(IntakeConstants.EATER_ARM_DOWN_POSE_SAMPLE);
+            SmartServo.getServoByName("intakeArm1").setPosition(IntakeConstants.EATER_ARM_DOWN_POSE_SAMPLE + IntakeConstants.EATER_ARM_ANGLE_CONSTANT);
+            SmartServo.getServoByName("intakeArm2").setPosition(IntakeConstants.EATER_ARM_DOWN_POSE_SAMPLE - IntakeConstants.EATER_ARM_ANGLE_CONSTANT);
         } else if (Constants.INTAKE_ARM == Constants.INTAKE_MOVE.DOWN_SPECIMEN) {
-            SmartServo.getServoByName("intakeArm1").setPosition(IntakeConstants.EATER_ARM_DOWN_POSE_SPECIMEN);
-            SmartServo.getServoByName("intakeArm2").setPosition(IntakeConstants.EATER_ARM_DOWN_POSE_SPECIMEN);
+            SmartServo.getServoByName("intakeArm1").setPosition(IntakeConstants.EATER_ARM_DOWN_POSE_SPECIMEN + IntakeConstants.EATER_ARM_ANGLE_CONSTANT);
+            SmartServo.getServoByName("intakeArm2").setPosition(IntakeConstants.EATER_ARM_DOWN_POSE_SPECIMEN - IntakeConstants.EATER_ARM_ANGLE_CONSTANT);
         } else if (Constants.INTAKE_ARM == Constants.INTAKE_MOVE.NEUTRAL) {
-            SmartServo.getServoByName("intakeArm1").setPosition(IntakeConstants.EATER_ARM_NEUTRAL_POSE);
-            SmartServo.getServoByName("intakeArm2").setPosition(IntakeConstants.EATER_ARM_NEUTRAL_POSE);
+            SmartServo.getServoByName("intakeArm1").setPosition(IntakeConstants.EATER_ARM_NEUTRAL_POSE + IntakeConstants.EATER_ARM_ANGLE_CONSTANT);
+            SmartServo.getServoByName("intakeArm2").setPosition(IntakeConstants.EATER_ARM_NEUTRAL_POSE - IntakeConstants.EATER_ARM_ANGLE_CONSTANT);
         }
 
         if (Constants.INTAKE_HAND == Constants.INTAKE_MOVE.UP) {

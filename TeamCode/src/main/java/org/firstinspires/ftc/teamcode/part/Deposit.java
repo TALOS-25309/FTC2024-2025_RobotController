@@ -22,6 +22,8 @@ class DepositConstants{
     public static int VER_LINEAR_HIGH_BASKET_POSE = 45000;
     public static int VER_LINEAR_LOW_BASKET_POSE = 20000;
 
+    public static int VER_LINEAR_TEST_POSE = 20000;
+
     public enum VerLinearMode { MANUAL, AUTO, EMERGENCY }
     public static DepositConstants.VerLinearMode VER_LINEAR_MODE = DepositConstants.VerLinearMode.AUTO;
 
@@ -92,6 +94,10 @@ public class Deposit implements Part{
     public void stop() {
         verticalLinear.stop();
         claw.stop();
+    }
+
+    public void cmdPIDTest(){
+       verticalLinear.cmdStretchForTest();
     }
 
     public void cmdDepositSample(Location location){
@@ -261,6 +267,159 @@ class VerticalLinear implements Part{
         motor2 = hardwareMap.get(DcMotor.class, "verticalLinear2");
 
         motor1.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        motor1.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
+        motor2.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        motor2.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
+        motor2.setTargetPosition(0);
+
+        motor1.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        motor2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+        motor1.setDirection(DcMotorSimple.Direction.REVERSE);
+        motor2.setDirection(DcMotorSimple.Direction.FORWARD);
+    }
+
+    public void update() {
+        if (this.isUsingPID) {
+            motor2.setTargetPosition(-this.targetPosition);
+            motor1.setPower(motor1.getPower());
+        }
+    }
+
+    public void stop() {
+        this.targetPosition = getPositionValue();
+        motor1.setPower(0);
+        motor2.setPower(0);
+        this.isUsingPID = false;
+        DepositConstants.VER_LINEAR_MODE = DepositConstants.VerLinearMode.EMERGENCY;
+    }
+
+    public void cmdStretchForTest() {
+        this.isUsingPID = true;
+        DepositConstants.VER_LINEAR_MODE = DepositConstants.VerLinearMode.AUTO;
+        this.targetPosition = DepositConstants.VER_LINEAR_HIGH_BASKET_POSE;
+        this.initPID();
+    }
+
+    public void cmdStretchToHighBasket() {
+        if(Global.IS_TEST) return;
+        this.isUsingPID = true;
+        DepositConstants.VER_LINEAR_MODE = DepositConstants.VerLinearMode.AUTO;
+        this.targetPosition = DepositConstants.VER_LINEAR_HIGH_BASKET_POSE;
+        this.initPID();
+    }
+
+    public void cmdStretchToLowBasket() {
+        if(Global.IS_TEST) return;
+        this.isUsingPID = true;
+        DepositConstants.VER_LINEAR_MODE = DepositConstants.VerLinearMode.AUTO;
+        this.targetPosition = DepositConstants.VER_LINEAR_LOW_BASKET_POSE;
+        this.initPID();
+    }
+
+    public void cmdStretchToLowChamber() {
+        if(Global.IS_TEST) return;
+        this.isUsingPID = true;
+        DepositConstants.VER_LINEAR_MODE = DepositConstants.VerLinearMode.AUTO;
+        this.targetPosition = DepositConstants.VER_LINEAR_LOW_CHAMBER_POSE;
+        this.initPID();
+    }
+
+    public void cmdStretchToHighChamber() {
+        if(Global.IS_TEST) return;
+        this.isUsingPID = true;
+        DepositConstants.VER_LINEAR_MODE = DepositConstants.VerLinearMode.AUTO;
+        this.targetPosition = DepositConstants.VER_LINEAR_HIGH_CHAMBER_POSE;
+        this.initPID();
+    }
+
+    public void cmdRetractToBottom() {
+        if(Global.IS_TEST) return;
+        this.isUsingPID = true;
+        DepositConstants.VER_LINEAR_MODE = DepositConstants.VerLinearMode.AUTO;
+        this.targetPosition = DepositConstants.VER_LINEAR_BOTTOM_POSE;
+        this.initPID();
+    }
+
+    public void cmdStretch() {
+        if(Global.IS_TEST) return;
+        this.isUsingPID = false;
+        DepositConstants.VER_LINEAR_MODE = DepositConstants.VerLinearMode.MANUAL;
+        motor1.setPower(DepositConstants.VER_LINEAR_MANUAL_SPEED);
+        motor2.setPower(DepositConstants.VER_LINEAR_MANUAL_SPEED);
+
+        if (getPositionValue() > DepositConstants.VER_LIMIT_HIGHTEST) {
+            motor1.setPower(0);
+            motor2.setPower(0);
+        }
+    }
+
+    public void cmdRetract() {
+        if(Global.IS_TEST) return;
+        this.isUsingPID = false;
+        DepositConstants.VER_LINEAR_MODE = DepositConstants.VerLinearMode.MANUAL;
+        motor1.setPower(-DepositConstants.VER_LINEAR_MANUAL_SPEED);
+        motor2.setPower(-DepositConstants.VER_LINEAR_MANUAL_SPEED);
+
+        if (getPositionValue() < DepositConstants.VER_LIMIT_LOWEST) {
+            motor1.setPower(0);
+            motor2.setPower(0);
+        }
+    }
+
+    public void cmdManualStop() {
+        if (DepositConstants.VER_LINEAR_MODE == DepositConstants.VerLinearMode.MANUAL) {
+            if (!this.isUsingPID) {
+                this.targetPosition = getPositionValue();
+                this.initPID();
+            }
+            this.isUsingPID = true;
+            motor1.setPower(0);
+            motor2.setPower(0);
+        } else if (DepositConstants.VER_LINEAR_MODE == DepositConstants.VerLinearMode.EMERGENCY) {
+            if (!this.isUsingPID) {
+                this.targetPosition = getPositionValue();
+                this.initPID();
+            }
+            this.isUsingPID = false;
+            motor1.setPower(0);
+            motor2.setPower(0);
+        }
+    }
+
+    private int getPositionValue() {
+        return -motor2.getCurrentPosition();
+    }
+
+    private void initPID() {
+        this.errorSum = 0.0;
+        this.previousError = 0.0;
+        this.previousTime = (double)System.nanoTime() / 1e9;
+    }
+}
+
+class PrevVerticalLinear implements Part{
+
+    private Telemetry telemetry;
+
+    private DcMotor motor1, motor2;
+    private int targetPosition = DepositConstants.VER_LINEAR_BOTTOM_POSE;
+
+    private boolean isUsingPID = false;
+
+    private double errorSum = 0.0;
+    private double previousError = 0.0;
+    private double previousTime = 0.0;
+
+    public void init(HardwareMap hardwareMap, Telemetry telemetry) {
+        this.telemetry = telemetry;
+
+        motor1 = hardwareMap.get(DcMotor.class, "verticalLinear1");
+        motor2 = hardwareMap.get(DcMotor.class, "verticalLinear2");
+
+        motor1.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         motor1.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
 
         motor2.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -321,6 +480,13 @@ class VerticalLinear implements Part{
         motor2.setPower(0);
         this.isUsingPID = false;
         DepositConstants.VER_LINEAR_MODE = DepositConstants.VerLinearMode.EMERGENCY;
+    }
+
+    public void cmdStretchForTest() {
+        this.isUsingPID = true;
+        DepositConstants.VER_LINEAR_MODE = DepositConstants.VerLinearMode.AUTO;
+        this.targetPosition = DepositConstants.VER_LINEAR_HIGH_BASKET_POSE;
+        this.initPID();
     }
 
     public void cmdStretchToHighBasket() {
@@ -408,7 +574,7 @@ class VerticalLinear implements Part{
             motor2.setPower(0);
         }
     }
-    
+
     private int getEncoderValue() {
         return -motor2.getCurrentPosition();
     }

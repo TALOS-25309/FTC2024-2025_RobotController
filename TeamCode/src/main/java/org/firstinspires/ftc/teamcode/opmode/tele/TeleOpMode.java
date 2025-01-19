@@ -134,13 +134,13 @@ public class TeleOpMode extends OpMode {
         // Auto Intake
         if (Global.ROBOT_STATE == Global.RobotState.INTAKE) {
             if (SmartGamepad.isPressed(smartGamepad2.gamepad().triangle, smartGamepad2.prev().triangle)) {
-                intake.cmdIntakeSample();
+                intake.cmdIntake(); // 후루룩
             } else if (SmartGamepad.isPressed(smartGamepad2.gamepad().circle, smartGamepad2.prev().circle)) {
-                intake.cmdIntakeSpecimen();
+                intake.cmdClick(true); // 세로 찝기
             } else if (SmartGamepad.isPressed(smartGamepad2.gamepad().square, smartGamepad2.prev().square)) {
-                intake.cmdIntakeFreeAngle();
+                intake.cmdClick(false); // 가로 찝기
             } else if (SmartGamepad.isPressed(smartGamepad2.gamepad().cross, smartGamepad2.prev().cross)) {
-                intake.cmdIntakeVomit();
+                intake.cmdIntakeVomit(); // 뱉기
             }
         }
 
@@ -197,12 +197,12 @@ public class TeleOpMode extends OpMode {
         }
 
         // Auto Eater
-        if (smartGamepad2.gamepad().left_trigger > 0.5 && smartGamepad2.gamepad().right_trigger > 0.5) {
-            if (Global.ROBOT_STATE == Global.RobotState.INTAKE)
-                intake.cmdAutoRotate();
-            else
-                Global.PLAYER2_WARNING = true;
-        }
+//        if (smartGamepad2.gamepad().left_trigger > 0.5 && smartGamepad2.gamepad().right_trigger > 0.5) {
+//            if (Global.ROBOT_STATE == Global.RobotState.INTAKE)
+//                intake.cmdAutoRotate();
+//            else
+//                Global.PLAYER2_WARNING = true;
+//        }
     }
 
     public void checkEmergency() {

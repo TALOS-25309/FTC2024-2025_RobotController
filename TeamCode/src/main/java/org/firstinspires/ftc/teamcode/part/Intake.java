@@ -25,16 +25,18 @@ class IntakeConstants {
     }
 
     // Horizontal Linear
-    public static double HOR_LINEAR_INNER_POSE = 0.0;
-    public static double HOR_LINEAR_OUTER_POSE = 0.0;
+    public static int HOR_LINEAR_INNER_POSE = 0;
+    public static int HOR_LINEAR_OUTER_POSE = 1830;
 
     public enum HorLinearMode { MANUAL, AUTO, EMERGENCY }
     public static HorLinearMode HOR_LINEAR_MODE = HorLinearMode.AUTO;
 
-    public static double HOR_LINEAR_AUTO_SPEED = 0.3;
+    public static double HOR_LINEAR_AUTO_SPEED = 0.5;
     public static double HOR_LINEAR_MANUAL_SPEED = 0.3;
 
-    public static double HOR_LINEAR_kP = 0.2 * 0.0001;
+    public static double HOR_LINEAR_kP = 0.002;
+    public static double HOR_LINEAR_kI = 0.0;
+    public static double HOR_LINEAR_kD = 0.0001;
 
     // Eater
     public static double EATER_ARM_DOWN_POSE_SAMPLE = 0.18;
@@ -60,8 +62,8 @@ class IntakeConstants {
 
     // new eater const
         // intake
-    public static double EATER_ARM_DOWN_POSE_1 = 0.36; //돌리기 위해서 아래로
-    public static double EATER_ARM_DOWN_POSE_2 = 0.30; // 실제로 먹는 위치
+    public static double EATER_ARM_DOWN_POSE_1 = 0.4; //돌리기 위해서 아래로
+    public static double EATER_ARM_DOWN_POSE_2 = 0.35; // 실제로 먹는 위치
     public static double EATER_HAND_DOWN_POSE = 0.77; // 손이 내려간 위치
     public static double EATER_ANGLE_DOWN = 0.18; // 로테이션
 
@@ -78,16 +80,16 @@ class IntakeConstants {
 
 
     // (both) up
-    public static double EATER_ARM_UP_POSE_1 = 0.4;
+    public static double EATER_ARM_UP_POSE_1 = 0.43;
 //    public static double EATER_ANGLE_UP = 0.51;
 //    public static double EATER_ARM_UP_POSE
 //    public static double EATER_HAND_UP_POSE
 
     //DELAY
-    public static double DELAY_LINEAR_RETRACT = 0;
+    public static double DELAY_LINEAR_RETRACT = 1.5;
     public static double DELAY_ARM_UP = 0;
-    public static double DELAY_ARM_COMPLETE = 2;
-    public static double DELAY_ARM_REST = 5;
+    public static double DELAY_ARM_COMPLETE = 2.5;
+    public static double DELAY_ARM_REST = 3;
     public static double DELAY_ARM_ROTATION_AND_MOVEMENT = 1.0;
 
         // INTAKE
@@ -210,7 +212,6 @@ public class Intake implements Part{
         if(isBusy) return;
         setBusy(true);
 
-        Schedule.addTask(eater::cmdEaterStop,0);
         Schedule.addTask(eater::cmdClickUp, 0);
         Schedule.addTask(()->{setBusy(false);},IntakeConstants.DELAY_UP);
     }
@@ -227,11 +228,10 @@ public class Intake implements Part{
     }
     public void cmdAutoRetract() {
         Global.ROBOT_STATE = Global.RobotState.DEPOSIT;
-        horizontalLinear.cmdSetMode(IntakeConstants.HorLinearMode.AUTO);
+        Schedule.addTask(()->{horizontalLinear.cmdSetMode(IntakeConstants.HorLinearMode.AUTO);}, IntakeConstants.DELAY_LINEAR_RETRACT);
 
-        eater.cmdEaterStop();
+        Schedule.addTask(eater::cmdEaterStop, IntakeConstants.DELAY_ARM_COMPLETE);
 
-        Schedule.addTask(horizontalLinear::cmdRetract, IntakeConstants.DELAY_LINEAR_RETRACT);
         Schedule.addTask(eater::cmdIntakeUp, IntakeConstants.DELAY_ARM_UP);
 
         Schedule.addTask(eater::cmdArmNeutral, IntakeConstants.DELAY_ARM_REST);
@@ -275,15 +275,18 @@ class HorizontalLinear implements Part {
     private Telemetry telemetry;
 
     private DcMotor motor;
-    private double targetPosition = IntakeConstants.HOR_LINEAR_INNER_POSE;
+    private int targetPosition = IntakeConstants.HOR_LINEAR_INNER_POSE;
     private boolean isUsingPID = false;
+
+    private double previousError = 0.0;
+    private double previousTime = 0.0;
 
     public void init(HardwareMap hardwareMap, Telemetry telemetry) {
         this.telemetry = telemetry;
 
         motor = hardwareMap.get(DcMotor.class, "horizontalLinear");
 
-        motor.setDirection(DcMotorSimple.Direction.FORWARD);
+        motor.setDirection(DcMotorSimple.Direction.REVERSE);
         motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
@@ -292,8 +295,19 @@ class HorizontalLinear implements Part {
 
     public void update() {
         if (this.isUsingPID) {
-            double err = targetPosition - motor.getCurrentPosition();
-            double power = IntakeConstants.HOR_LINEAR_kP * err;
+            double currentTime = (double)System.nanoTime() / 1e9;
+            double elapsedTime = currentTime - previousTime;
+
+            int err = targetPosition - getPositionValue();
+
+            double deltaErr = err - this.previousError;
+            double differential = deltaErr / elapsedTime;
+
+            previousTime = currentTime;
+            previousError = err;
+
+            double power = IntakeConstants.HOR_LINEAR_kP * err
+                    + IntakeConstants.HOR_LINEAR_kD * differential;
             if (IntakeConstants.HOR_LINEAR_MODE == IntakeConstants.HorLinearMode.AUTO) {
                 if (power > 0) power = Math.min(power, IntakeConstants.HOR_LINEAR_AUTO_SPEED);
                 else power = Math.max(power, -IntakeConstants.HOR_LINEAR_AUTO_SPEED);
@@ -307,7 +321,7 @@ class HorizontalLinear implements Part {
 
     public void stop() {
         IntakeConstants.HOR_LINEAR_MODE = IntakeConstants.HorLinearMode.EMERGENCY;
-        this.targetPosition = motor.getCurrentPosition();
+        this.targetPosition = getPositionValue();
         this.isUsingPID = false;
         motor.setPower(0);
     }
@@ -318,7 +332,7 @@ class HorizontalLinear implements Part {
         if (mode == IntakeConstants.HorLinearMode.AUTO) {
             this.targetPosition = IntakeConstants.HOR_LINEAR_INNER_POSE;
         } else {
-            this.targetPosition = motor.getCurrentPosition();
+            this.targetPosition = getPositionValue();
         }
         this.isUsingPID = true;
     }
@@ -344,14 +358,20 @@ class HorizontalLinear implements Part {
     }
     public void cmdManualStop() {
         if (IntakeConstants.HOR_LINEAR_MODE == IntakeConstants.HorLinearMode.MANUAL) {
+            if (!this.isUsingPID) {
+                this.targetPosition = getPositionValue();
+                motor.setPower(0);
+            }
             this.isUsingPID = true;
-            this.targetPosition = motor.getCurrentPosition();
-            motor.setPower(0);
         } else if (IntakeConstants.HOR_LINEAR_MODE == IntakeConstants.HorLinearMode.EMERGENCY) {
             this.isUsingPID = false;
-            this.targetPosition = motor.getCurrentPosition();
+            this.targetPosition = getPositionValue();
             motor.setPower(0);
         }
+    }
+    
+    public int getPositionValue() {
+        return -motor.getCurrentPosition();
     }
 }
 
@@ -441,7 +461,7 @@ class Eater implements Part {
         delay += IntakeConstants.DELAY_ARM_DOWN_1;
 
         Schedule.addTask(()->{
-            handServo.setPosition(IntakeConstants.EATER_HAND_DOWN_POSE);
+            handServo.setPosition(IntakeConstants.EATER_HAND_DOWN_POSE, 0.5);
         }, delay);
         delay += IntakeConstants.DELAY_ARM_DOWN_2;
 
@@ -473,7 +493,7 @@ class Eater implements Part {
         Schedule.addTask(()->{
             armServo1.setPosition(IntakeConstants.EATER_ARM_UP_POSE + IntakeConstants.EATER_ARM_ANGLE_CONSTANT, 0.7);
             armServo2.setPosition(IntakeConstants.EATER_ARM_UP_POSE - IntakeConstants.EATER_ARM_ANGLE_CONSTANT, 0.7);
-            handServo.setPosition(IntakeConstants.EATER_HAND_UP_POSE, 0.7);
+            handServo.setPosition(IntakeConstants.EATER_HAND_UP_POSE, 1.0);
         }, delay);
         delay += IntakeConstants.DELAY_ARM_UP_3;
 
@@ -490,7 +510,7 @@ class Eater implements Part {
         delay += IntakeConstants.DELAY_CLICK_SETTING_1;
 
         Schedule.addTask(()->{
-            handServo.setPosition(IntakeConstants.EATER_CLICK_HAND_SET_POSE);
+            handServo.setPosition(IntakeConstants.EATER_CLICK_HAND_SET_POSE, 0.5);
         }, delay);
         delay += IntakeConstants.DELAY_CLICK_SETTING_2;
     }
@@ -538,7 +558,7 @@ class Eater implements Part {
         Schedule.addTask(()->{
             armServo1.setPosition(IntakeConstants.EATER_ARM_UP_POSE + IntakeConstants.EATER_ARM_ANGLE_CONSTANT);
             armServo2.setPosition(IntakeConstants.EATER_ARM_UP_POSE - IntakeConstants.EATER_ARM_ANGLE_CONSTANT);
-            handServo.setPosition(IntakeConstants.EATER_HAND_UP_POSE);
+            handServo.setPosition(IntakeConstants.EATER_HAND_UP_POSE, 0.5);
         }, delay);
         delay += IntakeConstants.DELAY_ARM_UP_3;
 
@@ -558,7 +578,7 @@ class Eater implements Part {
         targetAngle = IntakeConstants.EATER_ANGLE_SAMPLE;
         Schedule.addTask(()->{handRotationServo.setPosition(targetAngle);}, IntakeConstants.DELAY_ARM_ROTATION_AND_MOVEMENT);
 
-        handServo.setPosition(IntakeConstants.EATER_HAND_DOWN_POSE_SAMPLE);
+        handServo.setPosition(IntakeConstants.EATER_HAND_DOWN_POSE_SAMPLE, 0.5);
 
         armServo1.setPosition(IntakeConstants.EATER_ARM_DOWN_POSE_SAMPLE + IntakeConstants.EATER_ARM_ANGLE_CONSTANT);
         armServo2.setPosition(IntakeConstants.EATER_ARM_DOWN_POSE_SAMPLE - IntakeConstants.EATER_ARM_ANGLE_CONSTANT);
@@ -567,7 +587,7 @@ class Eater implements Part {
         targetAngle = IntakeConstants.EATER_ANGLE_SPECIMEN;
         Schedule.addTask(()->{handRotationServo.setPosition(targetAngle);}, IntakeConstants.DELAY_ARM_ROTATION_AND_MOVEMENT);
 
-        handServo.setPosition(IntakeConstants.EATER_HAND_DOWN_POSE_SPECIMEN);
+        handServo.setPosition(IntakeConstants.EATER_HAND_DOWN_POSE_SPECIMEN, 0.5);
 
         armServo1.setPosition(IntakeConstants.EATER_ARM_DOWN_POSE_SPECIMEN + IntakeConstants.EATER_ARM_ANGLE_CONSTANT);
         armServo2.setPosition(IntakeConstants.EATER_ARM_DOWN_POSE_SPECIMEN - IntakeConstants.EATER_ARM_ANGLE_CONSTANT);
@@ -575,7 +595,7 @@ class Eater implements Part {
     public void cmdArmDownForFreeAngle(){
         Schedule.addTask(()->{handRotationServo.setPosition(targetAngle);}, IntakeConstants.DELAY_ARM_ROTATION_AND_MOVEMENT);
 
-        handServo.setPosition(IntakeConstants.EATER_HAND_DOWN_POSE_SAMPLE);
+        handServo.setPosition(IntakeConstants.EATER_HAND_DOWN_POSE_SAMPLE, 0.5);
 
         armServo1.setPosition(IntakeConstants.EATER_ARM_DOWN_POSE_SAMPLE + IntakeConstants.EATER_ARM_ANGLE_CONSTANT);
         armServo2.setPosition(IntakeConstants.EATER_ARM_DOWN_POSE_SAMPLE - IntakeConstants.EATER_ARM_ANGLE_CONSTANT);

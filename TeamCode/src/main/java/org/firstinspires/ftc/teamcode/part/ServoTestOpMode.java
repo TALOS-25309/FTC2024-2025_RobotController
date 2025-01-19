@@ -28,13 +28,12 @@ class Constants {
         DOWN_SAMPLE
     }
 
-    public static CloseOpen DEPOSIT_CLAW = CloseOpen.CLOSE;
-    public static UpDown DEPOSIT_ARM = UpDown.UP;
-    public static UpDown DEPOSIT_HAND = UpDown.UP;
+    public static CloseOpen DEPOSIT_CLAW = CloseOpen.OPEN;
+    public static UpDown DEPOSIT_ARM = UpDown.DOWN;
 
-    public static INTAKE_MOVE INTAKE_ARM = INTAKE_MOVE.UP;
-    public static INTAKE_MOVE INTAKE_HAND = INTAKE_MOVE.UP;
-    public static INTAKE_MOVE INTAKE_ANGLE = INTAKE_MOVE.UP;
+    public static INTAKE_MOVE INTAKE_ARM = INTAKE_MOVE.NEUTRAL;
+    public static INTAKE_MOVE INTAKE_HAND = INTAKE_MOVE.NEUTRAL;
+    public static INTAKE_MOVE INTAKE_ANGLE = INTAKE_MOVE.NEUTRAL;
 }
 
 @TeleOp(name = "TeleOp")
@@ -58,18 +57,22 @@ public class ServoTestOpMode extends OpMode {
 
     @Override
     public void start() {
+
+    }
+
+    @Override
+    public void loop() {
+        Schedule.update();
+        telemetry.update();
+
+        SmartServo.updateAll();
+
         if (Constants.DEPOSIT_ARM == Constants.UpDown.UP) {
             SmartServo.getServoByName("depositArm1").setPosition(DepositConstants.CLAW_ARM_UP_POS);
             SmartServo.getServoByName("depositArm2").setPosition(DepositConstants.CLAW_ARM_UP_POS);
         } else if (Constants.DEPOSIT_ARM == Constants.UpDown.DOWN) {
             SmartServo.getServoByName("depositArm1").setPosition(DepositConstants.CLAW_ARM_DOWN_POS);
             SmartServo.getServoByName("depositArm2").setPosition(DepositConstants.CLAW_ARM_DOWN_POS);
-        }
-
-        if (Constants.DEPOSIT_HAND == Constants.UpDown.UP) {
-            SmartServo.getServoByName("depositHand").setPosition(DepositConstants.CLAW_HAND_UP_POS);
-        } else if (Constants.DEPOSIT_HAND == Constants.UpDown.DOWN) {
-            SmartServo.getServoByName("depositHand").setPosition(DepositConstants.CLAW_HAND_DOWN_POS);
         }
 
         if (Constants.DEPOSIT_CLAW == Constants.CloseOpen.CLOSE) {
@@ -109,14 +112,6 @@ public class ServoTestOpMode extends OpMode {
         } else if (Constants.INTAKE_ANGLE == Constants.INTAKE_MOVE.DOWN_SPECIMEN) {
             SmartServo.getServoByName("intakeRotation").setPosition(IntakeConstants.EATER_ANGLE_SPECIMEN);
         }
-    }
-
-    @Override
-    public void loop() {
-        Schedule.update();
-        telemetry.update();
-
-        SmartServo.updateAll();
     }
 
     @Override

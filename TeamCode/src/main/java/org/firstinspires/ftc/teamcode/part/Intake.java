@@ -35,7 +35,6 @@ class IntakeConstants {
     public static double HOR_LINEAR_kP = 0.2 * 0.0001;
 
     // Eater
-    public static double EATER_ARM_씨발 = 0.3;
     public static double EATER_ARM_DOWN_POSE_SAMPLE = 0.18;
     public static double EATER_ARM_DOWN_POSE_SPECIMEN = 0.15;
     public static double EATER_ARM_NEUTRAL_POSE = 0.5;
@@ -45,8 +44,8 @@ class IntakeConstants {
 
     public static double EATER_HAND_DOWN_POSE_SAMPLE = 0.3;
     public static double EATER_HAND_DOWN_POSE_SPECIMEN = 0.5;
-    public static double EATER_HAND_NEUTRAL_POSE = 1;
-    public static double EATER_HAND_UP_POSE = 1;
+    public static double EATER_HAND_NEUTRAL_POSE = 0.15;
+    public static double EATER_HAND_UP_POSE = 0.15;
 
     public static double EATER_ANGLE_UP = 0.51;
     public static double EATER_ANGLE_SPECIMEN = 0.18;
@@ -68,10 +67,10 @@ class IntakeConstants {
 
     // new eater const
         // intake
-    public static double EATER_ARM_DOWN_POSE_1 = 0.15;
-    public static double EATER_ARM_DOWN_POSE_2 = 0.06;
-    public static double EATER_HAND_DOWN_POSE = 0.2;
-    public static double EATER_ANGLE_DOWN = 0.18;
+    public static double EATER_ARM_DOWN_POSE_1 = 0.15; //돌리기 위해서 아래로
+    public static double EATER_ARM_DOWN_POSE_2 = 0.06; // 실제로 먹는 위치
+    public static double EATER_HAND_DOWN_POSE = 0.2; // 손이 내려간 위치
+    public static double EATER_ANGLE_DOWN = 0.18; // 로테이션
 
         // click
     public static double EATER_CLICK_ARM_SET_POSE = 0.25;

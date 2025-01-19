@@ -42,8 +42,8 @@ class DepositConstants{
     public static double CLAW_CLAW_OPEN_POS = 0.9;
     public static double CLAW_CLAW_CLOSED_POS = 0.68;
 
-    public static double CLAW_ARM_UP_POS = 0;
-    public static double CLAW_ARM_DOWN_POS = 1;
+    public static double CLAW_ARM_UP_POS = 1;
+    public static double CLAW_ARM_DOWN_POS = 0;
 
     public static double CLAW_HAND_UP_POS = 0.65;
     public static double CLAW_HAND_DOWN_POS = 0.65;

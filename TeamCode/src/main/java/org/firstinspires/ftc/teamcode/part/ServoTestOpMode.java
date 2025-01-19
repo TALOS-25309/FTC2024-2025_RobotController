@@ -8,6 +8,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.teamcode.feature.Schedule;
 import org.firstinspires.ftc.teamcode.feature.SmartServo;
+import org.firstinspires.ftc.teamcode.global.Global;
 
 @Config
 class Constants {
@@ -34,6 +35,8 @@ class Constants {
     public static INTAKE_MOVE INTAKE_ARM = INTAKE_MOVE.NEUTRAL;
     public static INTAKE_MOVE INTAKE_HAND = INTAKE_MOVE.NEUTRAL;
     public static INTAKE_MOVE INTAKE_ANGLE = INTAKE_MOVE.NEUTRAL;
+
+    public static boolean EATER_RUNNING = false;
 }
 
 @TeleOp(name = "TeleOp")
@@ -111,6 +114,12 @@ public class ServoTestOpMode extends OpMode {
             SmartServo.getServoByName("intakeRotation").setPosition(IntakeConstants.EATER_ANGLE_SAMPLE);
         } else if (Constants.INTAKE_ANGLE == Constants.INTAKE_MOVE.DOWN_SPECIMEN) {
             SmartServo.getServoByName("intakeRotation").setPosition(IntakeConstants.EATER_ANGLE_SPECIMEN);
+        }
+
+        if(Constants.EATER_RUNNING) {
+            intake.cmdEaterRun();
+        } else {
+            intake.cmdEaterStop();
         }
     }
 

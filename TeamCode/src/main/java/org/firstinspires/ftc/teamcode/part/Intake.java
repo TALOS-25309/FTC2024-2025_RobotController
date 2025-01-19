@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.part;
 
+import android.net.wifi.aware.IdentityChangedListener;
+
 import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
@@ -55,37 +57,28 @@ class IntakeConstants {
 
     public static double EATER_HAND_SPEED = 0.02;
 
-    public static double DELAY_ARM_DOWN_1 = 1;
-    public static double DELAY_ARM_DOWN_2 = 1;
-    public static double DELAY_ARM_DOWN_3 = 1;
-    public static double DELAY_ARM_DOWN_4 = 1;
-
-    public static double DELAY_ARM_UP_1 = 1;
-    public static double DELAY_ARM_UP_2 = 1;
-    public static double DELAY_ARM_UP_3 = 1;
-
 
     // new eater const
         // intake
-    public static double EATER_ARM_DOWN_POSE_1 = 0.15; //돌리기 위해서 아래로
-    public static double EATER_ARM_DOWN_POSE_2 = 0.06; // 실제로 먹는 위치
-    public static double EATER_HAND_DOWN_POSE = 0.2; // 손이 내려간 위치
+    public static double EATER_ARM_DOWN_POSE_1 = 0.36; //돌리기 위해서 아래로
+    public static double EATER_ARM_DOWN_POSE_2 = 0.30; // 실제로 먹는 위치
+    public static double EATER_HAND_DOWN_POSE = 0.77; // 손이 내려간 위치
     public static double EATER_ANGLE_DOWN = 0.18; // 로테이션
 
         // click
-    public static double EATER_CLICK_ARM_SET_POSE = 0.25;
-    public static double EATER_CLICK_HAND_SET_POSE = 0.6;
+    public static double EATER_CLICK_ARM_SET_POSE = 0.39;
+    public static double EATER_CLICK_HAND_SET_POSE = 0.48;
 
     public static double EATER_CLICK_HAND_ROTATE_ANGLE_VER = 0.51;
     public static double EATER_CLICK_HAND_ROTATE_ANGLE_HOR = 0.85;
 
-    public static double EATER_CLICK_ARM_POSE_1 = 0.2;
-    public static double EATER_CLICK_ARM_POSE_2 = 0.3;
+    public static double EATER_CLICK_ARM_POSE_1 = 0.36;
+    public static double EATER_CLICK_ARM_POSE_2 = 0.39;
 
 
 
     // (both) up
-    public static double EATER_ARM_UP_POSE_1 = 0.35;
+    public static double EATER_ARM_UP_POSE_1 = 0.4;
 //    public static double EATER_ANGLE_UP = 0.51;
 //    public static double EATER_ARM_UP_POSE
 //    public static double EATER_HAND_UP_POSE
@@ -97,22 +90,32 @@ class IntakeConstants {
     public static double DELAY_ARM_REST = 5;
     public static double DELAY_ARM_ROTATION_AND_MOVEMENT = 1.0;
 
+        // INTAKE
+    public static double DELAY_ARM_DOWN_1 = 0.5;
+    public static double DELAY_ARM_DOWN_2 = 0.5;
+    public static double DELAY_ARM_DOWN_3 = 0.5;
+    public static double DELAY_ARM_DOWN_4 = 0.5;
+
+    public static double DELAY_ARM_UP_1 = 0.5;
+    public static double DELAY_ARM_UP_2 = 0.5;
+    public static double DELAY_ARM_UP_3 = 0.5;
+
     public static double DELAY_INTAKE_DOWN = DELAY_ARM_DOWN_1 + DELAY_ARM_DOWN_2 + DELAY_ARM_DOWN_3 + DELAY_ARM_DOWN_4;
-    public static double DELAY_INTAKE_UP = 3;
     public static double DELAY_EATER_RUN = DELAY_ARM_UP_1 + DELAY_ARM_UP_2 + DELAY_ARM_UP_3;
 
-    public static double DELAY_CLICK_SETTING_1 = 1;
-    public static double DELAY_CLICK_SETTING_2 = 1;
+    public static double DELAY_CLICK_SETTING_1 = 0.5;
+    public static double DELAY_CLICK_SETTING_2 = 0.5;
 
-    public static double DELAY_CLICK_1 = 1;
-    public static double DELAY_CLICK_2 = 1;
-    public static double DELAY_CLICK_3 = 1;
-    public static double DELAY_CLICK_4 = 1;
+    public static double DELAY_CLICK_1 = 0.5;
+    public static double DELAY_CLICK_2 = 0.5;
+    public static double DELAY_CLICK_3 = 0.5;
+    public static double DELAY_CLICK_4 = 0.5;
 
     public static double DELAY_CLICK_SETTING = DELAY_CLICK_SETTING_1 + DELAY_CLICK_SETTING_2;
-    public static double DELAY_CLICK_ROTATE = 3;
-    public static double DELAY_CLICK = 3;
-    public static double DELAY_CLICK_UP = 3;
+    public static double DELAY_CLICK_ROTATE = 1;
+    public static double DELAY_CLICK = DELAY_CLICK_1 + DELAY_ARM_DOWN_2 + DELAY_CLICK_3 + DELAY_CLICK_4;
+
+    public static double DELAY_UP = 0.5;
 
 }
 
@@ -171,14 +174,8 @@ public class Intake implements Part{
         delay += IntakeConstants.DELAY_EATER_RUN;
 
         Schedule.addTask(()->{
-            eater.cmdEaterStop();
-            eater.cmdIntakeUp();
-        }, delay);
-        delay += IntakeConstants.DELAY_INTAKE_UP;
-
-        Schedule.addTask(()->{
             setBusy(false);
-        },delay);
+        }, delay);
     }
 
     // 찍어서 먹기 -> 전달
@@ -199,13 +196,23 @@ public class Intake implements Part{
         Schedule.addTask(eater::cmdClick, delay);
         delay += IntakeConstants.DELAY_CLICK;
 
-        Schedule.addTask(eater::cmdClickUp, delay);
-        delay += IntakeConstants.DELAY_CLICK_UP;
+//        Schedule.addTask(eater::cmdClickUp, delay);
+//        delay += IntakeConstants.DELAY_CLICK_UP;
 
         Schedule.addTask(()->{
             setBusy(false);
         },delay);
 
+    }
+
+    // tansfer하기 위해 올리기
+    public void cmdMoveUp() {
+        if(isBusy) return;
+        setBusy(true);
+
+        Schedule.addTask(eater::cmdEaterStop,0);
+        Schedule.addTask(eater::cmdClickUp, 0);
+        Schedule.addTask(()->{setBusy(false);},IntakeConstants.DELAY_UP);
     }
 
     public void cmdIntakeVomit() {
@@ -439,7 +446,7 @@ class Eater implements Part {
         delay += IntakeConstants.DELAY_ARM_DOWN_2;
 
         Schedule.addTask(()->{
-            handServo.setPosition(IntakeConstants.EATER_ANGLE_DOWN);
+            handRotationServo.setPosition(IntakeConstants.EATER_ANGLE_DOWN);
         },delay);
         delay += IntakeConstants.DELAY_ARM_DOWN_3;
 
@@ -455,8 +462,8 @@ class Eater implements Part {
         double delay = 0;
 
         Schedule.addTask(()->{
-            armServo1.setPosition(IntakeConstants.EATER_ARM_UP_POSE_1 + IntakeConstants.EATER_ARM_ANGLE_CONSTANT);
-            armServo2.setPosition(IntakeConstants.EATER_ARM_UP_POSE_1 - IntakeConstants.EATER_ARM_ANGLE_CONSTANT);
+            armServo1.setPosition(IntakeConstants.EATER_ARM_UP_POSE_1 + IntakeConstants.EATER_ARM_ANGLE_CONSTANT, 0.5);
+            armServo2.setPosition(IntakeConstants.EATER_ARM_UP_POSE_1 - IntakeConstants.EATER_ARM_ANGLE_CONSTANT, 0.5);
         }, delay);
         delay += IntakeConstants.DELAY_ARM_UP_1;
 
@@ -464,9 +471,9 @@ class Eater implements Part {
         delay += IntakeConstants.DELAY_ARM_UP_2;
 
         Schedule.addTask(()->{
-            armServo1.setPosition(IntakeConstants.EATER_ARM_UP_POSE + IntakeConstants.EATER_ARM_ANGLE_CONSTANT);
-            armServo1.setPosition(IntakeConstants.EATER_ARM_UP_POSE - IntakeConstants.EATER_ARM_ANGLE_CONSTANT);
-            handServo.setPosition(IntakeConstants.EATER_HAND_UP_POSE);
+            armServo1.setPosition(IntakeConstants.EATER_ARM_UP_POSE + IntakeConstants.EATER_ARM_ANGLE_CONSTANT, 0.7);
+            armServo2.setPosition(IntakeConstants.EATER_ARM_UP_POSE - IntakeConstants.EATER_ARM_ANGLE_CONSTANT, 0.7);
+            handServo.setPosition(IntakeConstants.EATER_HAND_UP_POSE, 0.7);
         }, delay);
         delay += IntakeConstants.DELAY_ARM_UP_3;
 
@@ -502,8 +509,8 @@ class Eater implements Part {
         delay += IntakeConstants.DELAY_CLICK_1;
 
         Schedule.addTask(()->{
-            armServo1.setPosition(IntakeConstants.EATER_CLICK_ARM_POSE_1 + IntakeConstants.EATER_ARM_ANGLE_CONSTANT);
-            armServo2.setPosition(IntakeConstants.EATER_CLICK_ARM_POSE_1- IntakeConstants.EATER_ARM_ANGLE_CONSTANT);
+            armServo1.setPosition(IntakeConstants.EATER_CLICK_ARM_POSE_1 + IntakeConstants.EATER_ARM_ANGLE_CONSTANT, 0.5);
+            armServo2.setPosition(IntakeConstants.EATER_CLICK_ARM_POSE_1 - IntakeConstants.EATER_ARM_ANGLE_CONSTANT, 0.5);
         },delay);
         delay += IntakeConstants.DELAY_CLICK_2;
 
@@ -530,7 +537,7 @@ class Eater implements Part {
 
         Schedule.addTask(()->{
             armServo1.setPosition(IntakeConstants.EATER_ARM_UP_POSE + IntakeConstants.EATER_ARM_ANGLE_CONSTANT);
-            armServo1.setPosition(IntakeConstants.EATER_ARM_UP_POSE - IntakeConstants.EATER_ARM_ANGLE_CONSTANT);
+            armServo2.setPosition(IntakeConstants.EATER_ARM_UP_POSE - IntakeConstants.EATER_ARM_ANGLE_CONSTANT);
             handServo.setPosition(IntakeConstants.EATER_HAND_UP_POSE);
         }, delay);
         delay += IntakeConstants.DELAY_ARM_UP_3;

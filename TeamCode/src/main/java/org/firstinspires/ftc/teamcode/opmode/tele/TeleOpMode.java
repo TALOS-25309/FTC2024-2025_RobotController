@@ -124,6 +124,8 @@ public class TeleOpMode extends OpMode {
         }
         else if (SmartGamepad.isPressed(smartGamepad2.gamepad().dpad_down, smartGamepad2.prev().dpad_down)) {
             if (Global.ROBOT_STATE == Global.RobotState.INTAKE){
+                telemetry.addLine("INTAKE 트랜스퍼");
+                intake.cmdMoveUp();
                 intake.cmdAutoRetract();
                 deposit.cmdGrabSample();
             } else {
@@ -134,10 +136,13 @@ public class TeleOpMode extends OpMode {
         // Auto Intake
         if (Global.ROBOT_STATE == Global.RobotState.INTAKE) {
             if (SmartGamepad.isPressed(smartGamepad2.gamepad().triangle, smartGamepad2.prev().triangle)) {
+                telemetry.addLine("INTAKE 후루룩");
                 intake.cmdIntake(); // 후루룩
             } else if (SmartGamepad.isPressed(smartGamepad2.gamepad().circle, smartGamepad2.prev().circle)) {
+                telemetry.addLine("세로 집기");
                 intake.cmdClick(true); // 세로 찝기
             } else if (SmartGamepad.isPressed(smartGamepad2.gamepad().square, smartGamepad2.prev().square)) {
+                telemetry.addLine("가로 집기");
                 intake.cmdClick(false); // 가로 찝기
             } else if (SmartGamepad.isPressed(smartGamepad2.gamepad().cross, smartGamepad2.prev().cross)) {
                 intake.cmdIntakeVomit(); // 뱉기

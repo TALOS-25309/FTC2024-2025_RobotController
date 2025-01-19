@@ -60,6 +60,11 @@ public class SmartServo {
         }
 
         double progress = (System.nanoTime() - startTime) / (double) duration;
+
+        if (progress < 0) progress = 0;
+        else if (progress > 1) progress = 1;
+
+        progress = 1 - (1-progress) * (1-progress) * (1-progress);
         if (progress >= 1) {
             position = targetPosition;
             duration = 0;

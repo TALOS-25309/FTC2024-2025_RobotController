@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.opmode.tele;
 
 import com.acmerobotics.dashboard.FtcDashboard;
+import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -14,6 +15,12 @@ import org.firstinspires.ftc.teamcode.part.Deposit;
 import org.firstinspires.ftc.teamcode.part.Drive;
 import org.firstinspires.ftc.teamcode.part.Intake;
 import org.firstinspires.ftc.teamcode.part.Part;
+
+@Config
+class FUCK {
+    public static double FUCKING_VALUE = -0.7;
+    public static double SHIT = -0.2;
+}
 
 @TeleOp(name = "TeleOp")
 public class TeleOpMode extends OpMode {
@@ -29,6 +36,8 @@ public class TeleOpMode extends OpMode {
 
     @Override
     public void init() {
+        Global.ROBOT_STATE = Global.RobotState.NONE;
+
         telemetry = new MultipleTelemetry(this.telemetry, dashboard.getTelemetry());
 
         smartGamepad1 = new SmartGamepad(gamepad1);
@@ -95,12 +104,9 @@ public class TeleOpMode extends OpMode {
                 ? smartGamepad1.gamepad().left_stick_y
                 : smartGamepad1.gamepad().right_stick_y;
         double rot = smartGamepad1.gamepad().left_trigger - smartGamepad1.gamepad().right_trigger;
-        drive.cmdDrive(x, y, rot);
 
-        // Slow Drive
-        x = smartGamepad1.gamepad().dpad_up ? 1 : smartGamepad1.gamepad().dpad_down ? -1 : 0;
-        y = smartGamepad1.gamepad().dpad_left ? -1 : smartGamepad1.gamepad().dpad_right ? 1 : 0;
-        drive.cmdDriveSlowly(x, y);
+        rot += x * (FUCK.FUCKING_VALUE + (x > 0 ? FUCK.SHIT : - FUCK.SHIT));
+        drive.cmdDrive(-x, -y, rot);
 
         // Road Runner Macro
         if (SmartGamepad.isPressed(smartGamepad1.gamepad().triangle, smartGamepad1.prev().triangle)) {

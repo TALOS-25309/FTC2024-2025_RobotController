@@ -6,6 +6,7 @@ import com.acmerobotics.roadrunner.geometry.Vector2d;
 import com.acmerobotics.roadrunner.trajectory.Trajectory;
 import com.acmerobotics.roadrunner.trajectory.TrajectoryBuilder;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
@@ -27,7 +28,7 @@ class DriveConstants {
     public static double OMEGA_WEIGHT = 1.0;
 
     // Localization
-    public static boolean USING_LOCALIZATION_BASED_DRIVE = true;
+    public static boolean USING_LOCALIZATION_BASED_DRIVE = false;
     public static Pose2d AUTO_INITIAL_POSITION = new Pose2d(0, 0, 0);
     public static Pose2d TELE_INITIAL_POSITION = new Pose2d(0, 0, 0);
     public static Pose2d INITIAL_POSITION = AUTO_INITIAL_POSITION;
@@ -41,34 +42,17 @@ class DriveConstants {
 public class Drive implements Part {
     private Telemetry telemetry;
 
-    private DcMotor leftFront, leftRear, rightRear, rightFront;
-    private DcMotor[] motors = {leftFront, leftRear, rightRear, rightFront};
-
     private SampleMecanumDrive drive;
     private Pose2d robotPose;
 
     public void init(HardwareMap hardwareMap, Telemetry telemetry) {
         this.telemetry = telemetry;
-
-        // Initialize Motors
-        leftFront = hardwareMap.get(DcMotor.class, "leftFront");
-        leftRear = hardwareMap.get(DcMotor.class, "leftRear");
-        rightRear = hardwareMap.get(DcMotor.class, "rightRear");
-        rightFront = hardwareMap.get(DcMotor.class, "rightFront");
-
-        motors[0] = leftFront;
-        motors[1] = leftRear;
-        motors[2] = rightRear;
-        motors[3] = rightFront;
-
-        for (DcMotor motor : motors) {
-            motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-            motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        }
-
         // Initialize Drive
         this.drive = new SampleMecanumDrive(hardwareMap);
+
         this.drive.setPoseEstimate(DriveConstants.INITIAL_POSITION);
+        drive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+
     }
 
     public void update() {
@@ -83,9 +67,6 @@ public class Drive implements Part {
 
     public void stop() {
         this.drive.breakFollowing();
-        for (DcMotor motor : motors) {
-            motor.setPower(0);
-        }
     }
 
     public TrajectoryBuilder trajectoryBuilder() {
@@ -97,50 +78,13 @@ public class Drive implements Part {
     }
 
     public void cmdDrive(double x, double y, double omega) {
-        if (x != 0.0 || y != 0.0 || omega != 0.0) {
-            if (this.drive.isBusy()){
-                this.drive.breakFollowing();
-                Global.PLAYER1_WARNING = true;
-            }
-        }
-
-        if (DriveConstants.USING_LOCALIZATION_BASED_DRIVE) {
-            double angle = DriveConstants.INITIAL_POSITION.getHeading() + this.robotPose.getHeading();
-
-            Vector2d rotVector = new Vector2d(x, y).rotated(-angle);
-            x = rotVector.getX();
-            y = rotVector.getY();
-        }
-
-        Pose2d drivePower = new Pose2d (
-                x * DriveConstants.VX_WEIGHT,
-                y * DriveConstants.VY_WEIGHT,
-                omega * DriveConstants.OMEGA_WEIGHT
+        drive.setWeightedDrivePower(
+                new Pose2d(
+                        y,
+                        -x,
+                        -omega
+                )
         );
-
-        double denom = Math.abs(drivePower.getX()) + Math.abs(drivePower.getY()) + Math.abs(drivePower.getHeading());
-        if (denom > 1) {
-            drivePower = new Pose2d(drivePower.getX(), drivePower.getY(), drivePower.getHeading()).div(denom);
-        }
-
-        this.motors[0].setPower(drivePower.getX() - drivePower.getY() - drivePower.getHeading());
-        this.motors[1].setPower(drivePower.getX() + drivePower.getY() - drivePower.getHeading());
-        this.motors[2].setPower(drivePower.getX() - drivePower.getY() + drivePower.getHeading());
-        this.motors[3].setPower(drivePower.getX() + drivePower.getY() + drivePower.getHeading());
-    }
-
-    public void cmdDriveSlowly(double x, double y) {
-        if (x != 0.0 || y != 0.0) {
-            if (this.drive.isBusy()){
-                this.drive.breakFollowing();
-                Global.PLAYER1_WARNING = true;
-            }
-        }
-
-        this.motors[0].setPower(x * DriveConstants.MOTOR_SPEED_SLOW - y * DriveConstants.MOTOR_SPEED_SLOW);
-        this.motors[1].setPower(x * DriveConstants.MOTOR_SPEED_SLOW + y * DriveConstants.MOTOR_SPEED_SLOW);
-        this.motors[2].setPower(x * DriveConstants.MOTOR_SPEED_SLOW - y * DriveConstants.MOTOR_SPEED_SLOW);
-        this.motors[3].setPower(x * DriveConstants.MOTOR_SPEED_SLOW + y * DriveConstants.MOTOR_SPEED_SLOW);
     }
 
     public void cmdFollowTrajectory(TrajectorySequence trajectory) {

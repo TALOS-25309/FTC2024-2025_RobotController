@@ -43,7 +43,7 @@ class DepositConstants{
     public static double CLAW_CLAW_CLOSED_POS = 0.68;
 
     public static double CLAW_ARM_UP_POS = 0.9;
-    public static double CLAW_ARM_DOWN_POS = 0.05;
+    public static double CLAW_ARM_DOWN_POS = 0.0;
 
     public static double CLAW_HAND_UP_POS = 0.65;
     public static double CLAW_HAND_DOWN_POS = 0.65;
@@ -56,10 +56,10 @@ class DepositConstants{
     public static double DELAY_DEPOSIT_SPECIMEN_GOTO_LOW = 0.1;
     public static double DELAY_DEPOSIT_SPECIMEN_GOTO_HIGH = 0.1;
 
-    public static double DELAY_DEPOSIT_OPEN_CLAW = 0.1;
-    public static double DELAY_DEPOSIT_RETRACT_LINEAR_SAMPLE = 0.1;
-    public static double DELAY_DEPOSIT_RETRACT_LINEAR_SPECIMEN_1 = 0.05; //
-    public static double DELAY_DEPOSIT_RETRACT_LINEAR_SPECIMEN_2 = 0.4; //
+    public static double DELAY_DEPOSIT_OPEN_CLAW = 0.5;
+    public static double DELAY_DEPOSIT_RETRACT_LINEAR_SAMPLE = 3;
+    public static double DELAY_DEPOSIT_RETRACT_LINEAR_SPECIMEN_1 = 0.4; //
+    public static double DELAY_DEPOSIT_RETRACT_LINEAR_SPECIMEN_2 = 0.1; //
 
 }
 
@@ -193,12 +193,14 @@ public class Deposit implements Part{
         delay += DepositConstants.DELAY_DEPOSIT_OPEN_CLAW;
 
         // 2. Retract Linear
+        Schedule.addTask(claw::cmdClose,delay);
         Schedule.addTask(claw::cmdDown, delay);
         Schedule.addTask(verticalLinear::cmdRetractToBottom, delay);
         delay += DepositConstants.DELAY_DEPOSIT_RETRACT_LINEAR_SAMPLE;
 
         // 3. End
         Schedule.addTask(() -> {
+            claw.cmdOpen();
             isBusy = false;
         }, delay);
     }

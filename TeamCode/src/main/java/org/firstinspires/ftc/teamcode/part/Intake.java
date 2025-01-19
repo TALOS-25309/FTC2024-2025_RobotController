@@ -26,7 +26,7 @@ class IntakeConstants {
 
     // Horizontal Linear
     public static int HOR_LINEAR_INNER_POSE = 0;
-    public static int HOR_LINEAR_OUTER_POSE = 1830;
+    public static int HOR_LINEAR_OUTER_POSE = 1800;
 
     public enum HorLinearMode { MANUAL, AUTO, EMERGENCY }
     public static HorLinearMode HOR_LINEAR_MODE = HorLinearMode.AUTO;
@@ -42,7 +42,7 @@ class IntakeConstants {
     public static double EATER_ARM_DOWN_POSE_SAMPLE = 0.18;
     public static double EATER_ARM_DOWN_POSE_SPECIMEN = 0.15;
     public static double EATER_ARM_NEUTRAL_POSE = 0.5;
-    public static double EATER_ARM_UP_POSE = 0.7;
+    public static double EATER_ARM_UP_POSE = 0.67;
 
     public static double EATER_ARM_ANGLE_CONSTANT = -0.035;
 
@@ -62,9 +62,9 @@ class IntakeConstants {
 
     // new eater const
         // intake
-    public static double EATER_ARM_DOWN_POSE_1 = 0.4; //돌리기 위해서 아래로
-    public static double EATER_ARM_DOWN_POSE_2 = 0.35; // 실제로 먹는 위치
-    public static double EATER_HAND_DOWN_POSE = 0.77; // 손이 내려간 위치
+    public static double EATER_ARM_DOWN_POSE_1 = 0.5; //돌리기 위해서 아래로
+    public static double EATER_ARM_DOWN_POSE_2 = 0.34; // 실제로 먹는 위치
+    public static double EATER_HAND_DOWN_POSE = 0.74; // 손이 내려간 위치
     public static double EATER_ANGLE_DOWN = 0.18; // 로테이션
 
         // click
@@ -80,7 +80,7 @@ class IntakeConstants {
 
 
     // (both) up
-    public static double EATER_ARM_UP_POSE_1 = 0.43;
+    public static double EATER_ARM_UP_POSE_1 = 0.48;
 //    public static double EATER_ANGLE_UP = 0.51;
 //    public static double EATER_ARM_UP_POSE
 //    public static double EATER_HAND_UP_POSE
@@ -100,7 +100,7 @@ class IntakeConstants {
 
     public static double DELAY_ARM_UP_1 = 0.5;
     public static double DELAY_ARM_UP_2 = 0.5;
-    public static double DELAY_ARM_UP_3 = 0.5;
+    public static double DELAY_ARM_UP_3 = 2;
 
     public static double DELAY_INTAKE_DOWN = DELAY_ARM_DOWN_1 + DELAY_ARM_DOWN_2 + DELAY_ARM_DOWN_3 + DELAY_ARM_DOWN_4;
     public static double DELAY_EATER_RUN = DELAY_ARM_UP_1 + DELAY_ARM_UP_2 + DELAY_ARM_UP_3;
@@ -197,9 +197,6 @@ public class Intake implements Part{
 
         Schedule.addTask(eater::cmdClick, delay);
         delay += IntakeConstants.DELAY_CLICK;
-
-//        Schedule.addTask(eater::cmdClickUp, delay);
-//        delay += IntakeConstants.DELAY_CLICK_UP;
 
         Schedule.addTask(()->{
             setBusy(false);
@@ -491,8 +488,8 @@ class Eater implements Part {
         delay += IntakeConstants.DELAY_ARM_UP_2;
 
         Schedule.addTask(()->{
-            armServo1.setPosition(IntakeConstants.EATER_ARM_UP_POSE + IntakeConstants.EATER_ARM_ANGLE_CONSTANT, 0.7);
-            armServo2.setPosition(IntakeConstants.EATER_ARM_UP_POSE - IntakeConstants.EATER_ARM_ANGLE_CONSTANT, 0.7);
+            armServo1.setPosition(IntakeConstants.EATER_ARM_UP_POSE + IntakeConstants.EATER_ARM_ANGLE_CONSTANT, 1.0);
+            armServo2.setPosition(IntakeConstants.EATER_ARM_UP_POSE - IntakeConstants.EATER_ARM_ANGLE_CONSTANT, 1.0);
             handServo.setPosition(IntakeConstants.EATER_HAND_UP_POSE, 1.0);
         }, delay);
         delay += IntakeConstants.DELAY_ARM_UP_3;
@@ -556,9 +553,9 @@ class Eater implements Part {
         delay += IntakeConstants.DELAY_ARM_UP_2;
 
         Schedule.addTask(()->{
-            armServo1.setPosition(IntakeConstants.EATER_ARM_UP_POSE + IntakeConstants.EATER_ARM_ANGLE_CONSTANT);
-            armServo2.setPosition(IntakeConstants.EATER_ARM_UP_POSE - IntakeConstants.EATER_ARM_ANGLE_CONSTANT);
-            handServo.setPosition(IntakeConstants.EATER_HAND_UP_POSE, 0.5);
+            armServo1.setPosition(IntakeConstants.EATER_ARM_UP_POSE + IntakeConstants.EATER_ARM_ANGLE_CONSTANT,1.0);
+            armServo2.setPosition(IntakeConstants.EATER_ARM_UP_POSE - IntakeConstants.EATER_ARM_ANGLE_CONSTANT,1.0);
+            handServo.setPosition(IntakeConstants.EATER_HAND_UP_POSE, 1);
         }, delay);
         delay += IntakeConstants.DELAY_ARM_UP_3;
 

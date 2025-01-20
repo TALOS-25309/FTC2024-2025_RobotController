@@ -58,8 +58,8 @@ class DepositConstants{
 
     public static double DELAY_DEPOSIT_OPEN_CLAW = 0.5;
     public static double DELAY_DEPOSIT_RETRACT_LINEAR_SAMPLE = 3;
-    public static double DELAY_DEPOSIT_RETRACT_LINEAR_SPECIMEN_1 = 0.4; //
-    public static double DELAY_DEPOSIT_RETRACT_LINEAR_SPECIMEN_2 = 0.1; //
+    public static double DELAY_DEPOSIT_RETRACT_LINEAR_SPECIMEN_1 = 0.8 ; //
+    public static double DELAY_DEPOSIT_RETRACT_LINEAR_SPECIMEN_2 = 0.5; //
 
 }
 
@@ -113,12 +113,12 @@ public class Deposit implements Part{
         double delay = 0;
 
         // 1. Go to Basket
-        Schedule.addTask(claw::cmdUp, delay);
+        claw.cmdUp();
         if(location == Location.LOW){
-            Schedule.addTask(verticalLinear::cmdStretchToLowBasket, delay);
+            verticalLinear.cmdStretchToLowBasket();
             delay += DepositConstants.DELAY_DEPOSIT_SAMPLE_GOTO_LOW;
         } else {
-            Schedule.addTask(verticalLinear::cmdStretchToHighBasket, delay);
+            verticalLinear.cmdStretchToHighBasket();
             delay += DepositConstants.DELAY_DEPOSIT_SAMPLE_GOTO_HIGH;
         }
 
@@ -140,7 +140,7 @@ public class Deposit implements Part{
         double delay = 0;
 
         // 1. Go to Chamber
-        Schedule.addTask(claw::cmdUp, delay);
+        claw.cmdUp();
         if (location == Location.LOW) {
             Schedule.addTask(verticalLinear::cmdStretchToLowChamber, delay);
             delay += DepositConstants.DELAY_DEPOSIT_SPECIMEN_GOTO_LOW;
@@ -189,7 +189,7 @@ public class Deposit implements Part{
         double delay = 0;
 
         // 1. Open Claw
-        Schedule.addTask(claw::cmdOpen, delay);
+        claw.cmdOpen();
         delay += DepositConstants.DELAY_DEPOSIT_OPEN_CLAW;
 
         // 2. Retract Linear
@@ -456,7 +456,7 @@ class Claw implements Part{
         servoArm1.servo().setDirection(Servo.Direction.FORWARD);
         servoArm2.servo().setDirection(Servo.Direction.REVERSE);
 
-        servoClaw.setPosition(DepositConstants.CLAW_CLAW_OPEN_POS);
+        servoClaw.setPosition(DepositConstants.CLAW_CLAW_CLOSED_POS);
         servoHand.setPosition(DepositConstants.CLAW_HAND_DOWN_POS);
         servoArm1.setPosition(DepositConstants.CLAW_ARM_DOWN_POS);
         servoArm2.setPosition(DepositConstants.CLAW_ARM_DOWN_POS);

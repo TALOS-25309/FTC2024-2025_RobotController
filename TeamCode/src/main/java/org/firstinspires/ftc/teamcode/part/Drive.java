@@ -37,6 +37,8 @@ class DriveConstants {
     public static Vector2d BASKET_POSITION = new Vector2d(-72, -72);
     public static double BASKET_RADIUS = 6;
     public static Vector2d SPECIMEN_POSITION = new Vector2d(0, 0);
+
+    public static double directionSign = 1.0;
 }
 
 public class Drive implements Part {
@@ -80,8 +82,8 @@ public class Drive implements Part {
     public void cmdDrive(double x, double y, double omega) {
         drive.setWeightedDrivePower(
                 new Pose2d(
-                        y,
-                        -x,
+                        y * DriveConstants.directionSign,
+                        -x * DriveConstants.directionSign,
                         -omega
                 )
         );
@@ -117,5 +119,13 @@ public class Drive implements Part {
 
     public void cmdAutoAlignSubmersible() {
 
+    }
+
+    public void cmdPositiveDirection() {
+        DriveConstants.directionSign = 1.0;
+    }
+
+    public void cmdNegativeDirection() {
+        DriveConstants.directionSign = -1.0;
     }
 }

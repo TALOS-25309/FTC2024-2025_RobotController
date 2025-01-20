@@ -63,7 +63,7 @@ class IntakeConstants {
     // new eater const
         // intake
     public static double EATER_ARM_DOWN_POSE_1 = 0.5; //돌리기 위해서 아래로
-    public static double EATER_ARM_DOWN_POSE_2 = 0.33; // 실제로 먹는 위치
+    public static double EATER_ARM_DOWN_POSE_2 = 0.325; // 실제로 먹는 위치
     public static double EATER_HAND_DOWN_POSE = 0.74; // 손이 내려간 위치
     public static double EATER_ANGLE_DOWN = 0.18; // 로테이션
 

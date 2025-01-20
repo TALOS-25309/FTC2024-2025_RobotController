@@ -36,7 +36,7 @@ public class TeleOpMode extends OpMode {
 
     @Override
     public void init() {
-        Global.ROBOT_STATE = Global.RobotState.NONE;
+        Global.ROBOT_STATE = Global.RobotState.DEPOSIT;
 
         telemetry = new MultipleTelemetry(this.telemetry, dashboard.getTelemetry());
 
@@ -114,6 +114,8 @@ public class TeleOpMode extends OpMode {
         } else if (SmartGamepad.isPressed(smartGamepad1.gamepad().cross, smartGamepad1.prev().cross)) {
             drive.cmdAutoAlignSpecimen();
         }
+
+
 
         // Hanging
     }

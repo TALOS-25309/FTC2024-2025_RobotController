@@ -63,7 +63,7 @@ class IntakeConstants {
     // new eater const
         // intake
     public static double EATER_ARM_DOWN_POSE_1 = 0.5; //돌리기 위해서 아래로
-    public static double EATER_ARM_DOWN_POSE_2 = 0.34; // 실제로 먹는 위치
+    public static double EATER_ARM_DOWN_POSE_2 = 0.33; // 실제로 먹는 위치
     public static double EATER_HAND_DOWN_POSE = 0.74; // 손이 내려간 위치
     public static double EATER_ANGLE_DOWN = 0.18; // 로테이션
 
@@ -537,8 +537,6 @@ class Eater implements Part {
         },delay);
         delay += IntakeConstants.DELAY_CLICK_3;
 
-        Schedule.addTask(this::cmdEaterStop, delay);
-        delay += IntakeConstants.DELAY_CLICK_4;
     }
     public void cmdClickUp() {
         double delay = 0;
@@ -559,6 +557,7 @@ class Eater implements Part {
         }, delay);
         delay += IntakeConstants.DELAY_ARM_UP_3;
 
+        Schedule.addTask(this::cmdEaterStop, delay);
         Schedule.addTask(()->{}, delay);
     }
 

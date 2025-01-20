@@ -109,10 +109,16 @@ public class TeleOpMode extends OpMode {
         drive.cmdDrive(-x, -y, rot);
 
         // Road Runner Macro
+        /*
         if (SmartGamepad.isPressed(smartGamepad1.gamepad().triangle, smartGamepad1.prev().triangle)) {
             drive.cmdAutoAlignBasket();
         } else if (SmartGamepad.isPressed(smartGamepad1.gamepad().cross, smartGamepad1.prev().cross)) {
             drive.cmdAutoAlignSpecimen();
+        }
+        */
+
+        if (SmartGamepad.isPressed(smartGamepad1.gamepad().circle, smartGamepad1.prev().circle)) {
+            drive.cmdChangeDirection();
         }
 
 

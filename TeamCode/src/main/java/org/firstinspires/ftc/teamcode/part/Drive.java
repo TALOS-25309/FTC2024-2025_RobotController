@@ -121,11 +121,7 @@ public class Drive implements Part {
 
     }
 
-    public void cmdPositiveDirection() {
-        DriveConstants.directionSign = 1.0;
-    }
-
-    public void cmdNegativeDirection() {
-        DriveConstants.directionSign = -1.0;
+    public void cmdChangeDirection() {
+        DriveConstants.directionSign *= -1.0;
     }
 }
